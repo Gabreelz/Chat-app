@@ -1,1 +1,2 @@
-# Chat-app
+Desenvolver um aplicativo mobile em Flutter de chat em tempo real utilizando Supabasecomo backend. O app permite comunicação entre usuários em conversas individuais ougrupos, com mensagens instantâneas de texto e mídia simples.
+O projeto busca demonstrar o uso de serviços em nuvem modernos para sincronização em tempo real e boas práticas de desenvolvimento mobile com Flutter.
