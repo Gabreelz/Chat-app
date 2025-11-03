@@ -1,0 +1,1 @@
+// envia, busca e escuta mensagens.

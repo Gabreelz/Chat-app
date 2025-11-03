@@ -1,0 +1,1 @@
+// lista de participantes, últimas mensagens, etc.

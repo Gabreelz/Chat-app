@@ -1,0 +1,1 @@
+// inicializa a conexão com o Supabase.

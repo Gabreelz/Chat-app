@@ -1,0 +1,1 @@
+// lida com mensagens e status em tempo real.

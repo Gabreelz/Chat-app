@@ -1,0 +1,1 @@
+// controla o usuário logado.

@@ -1,0 +1,1 @@
+// armazena as conversas e mensagens em tempo real.
