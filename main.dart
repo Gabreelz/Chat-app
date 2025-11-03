@@ -1,40 +1,29 @@
-import 'src/models/ConversationModel.dart';
+import 'package:flutter/material.dart';
+import 'src/screens/login/login_page.dart';
+import 'src/screens/chat/chat_list_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  Map<String, dynamic> data = {
-    'id': 'conv123',
-    'title': 'Grupo de Amigos',
-    'created_at': '2025-11-03T13:00:00Z',
-    'participant_ids': ['user1', 'user2'],
-    'participants': [
-      {
-        'id': 'user1',
-        'name': 'Maria',
-        'email': 'maria@exemplo.com',
-        'avatar_url': null,
-        'created_at': '2025-11-01T10:00:00Z',
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://jfnbjmuyvqfpzkhjiscr.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbmJqbXV5dnFmcHpraGppc2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODkyNjMsImV4cCI6MjA3Nzc2NTI2M30.G1BR610e2TmbtfMF_i7YwDJs9HYTxSNYPjDTHiKMRj4',
+  );
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Chat App',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginPage(),
+        '/chat_list': (context) => const ChatListPage(),
       },
-      {
-        'id': 'user2',
-        'name': 'João',
-        'email': 'joao@exemplo.com',
-        'avatar_url': null,
-        'created_at': '2025-11-02T11:00:00Z',
-      }
-    ],
-    'messages': [
-      {
-        'id': 'msg1',
-        'user_id': 'user1',
-        'chat_id': 'conv123',
-        'content': 'Oi João!',
-        'media_url': null,
-        'created_at': '2025-11-03T13:05:00Z',
-      }
-    ],
-  };
-
-  ConversationModel conv = ConversationModel.fromMap(data);
-  print(conv);
-  print(conv.toMap());
+    );
+  }
 }
