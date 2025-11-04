@@ -3,17 +3,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final SupabaseClient _client = Supabase.instance.client;
 
-  Future<bool> signUp(String email, String password) async {
+  Future<bool> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
+      data: {'full_name': fullName},
     );
 
-    // Retorna true se o usuário foi criado (mesmo que precise confirmar email)
     return response.user != null;
   }
 
-  Future<bool> signIn(String email, String password) async {
+  /// Faz login com e-mail e senha.
+  Future<bool> signIn({
+    required String email,
+    required String password,
+  }) async {
     final response = await _client.auth.signInWithPassword(
       email: email,
       password: password,
@@ -29,4 +37,6 @@ class AuthService {
   String? getCurrentUserId() {
     return _client.auth.currentUser?.id;
   }
+
+  User? get currentUser => _client.auth.currentUser;
 }

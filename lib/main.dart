@@ -1,4 +1,8 @@
+import 'package:chat_app/src/screens/home/home_page.dart';
+import 'package:chat_app/src/screens/login/signup_page.dart';
+import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Atualize para os caminhos corretos do seu projeto
@@ -14,22 +18,25 @@ void main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmbmJqbXV5dnFmcHpraGppc2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIxODkyNjMsImV4cCI6MjA3Nzc2NTI2M30.G1BR610e2TmbtfMF_i7YwDJs9HYTxSNYPjDTHiKMRj4',
   );
 
-  runApp(const MyApp());
+  runApp(const MainApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// Aplicação principal
+class MainApp extends StatelessWidget {
+  /// Construtor da classe [MainApp]
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chat App',
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      builder: FToastBuilder(),
       routes: {
-        '/': (context) => const LoginPage(),
-        '/chat_list': (context) => const ChatListPage(),
+        RoutesEnum.login.route: (context) => LoginScreen(),
+        RoutesEnum.register.route: (context) => const RegisterScreen(),
+        RoutesEnum.home.route: (context) => const HomeScreen(),
       },
+      initialRoute: RoutesEnum.login.route,
     );
   }
 }
