@@ -1,47 +1,40 @@
-// texto, autor, timestamp.
-
-class messageModel {
+// lib/src/models/messageModel.dart
+class MessageModel {
   final String id;
-  final String userId;        
-  final String chatId;        
-  final String content;       
-  final String? mediaUrl;     
-  final DateTime createdAt;   
+  final String conversationId;
+  final String authorId;
+  final String? text;
+  final String? fileUrl;
+  final DateTime createdAt;
 
-  messageModel({
-    required this.id, 
-    required this.userId, 
-    required this.chatId, 
-    required this.content, 
-    this.mediaUrl, 
+  MessageModel({
+    required this.id,
+    required this.conversationId,
+    required this.authorId,
+    this.text,
+    this.fileUrl,
     required this.createdAt,
   });
 
-  factory messageModel.fromMap(Map<String, dynamic> map) {
-    return messageModel(
-      id: map['id'] ?? '',
-      userId: map['user_id'] ?? '',
-      chatId: map['chat_id'] ?? '',
-      content: map['content'] ?? '',
-      mediaUrl: map['media_url'],
-      createdAt: DateTime.parse(map['created_at']),
+  factory MessageModel.fromMap(Map<String, dynamic> m) {
+    return MessageModel(
+      id: m['id'],
+      conversationId: m['conversation_id'],
+      authorId: m['author_id'],
+      text: m['text'],
+      fileUrl: m['file_url'],
+      createdAt: DateTime.parse(m['created_at']),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'user_id': userId,
-      'chat_id': chatId,
-      'content': content,
-      'media_url': mediaUrl,
+      'conversation_id': conversationId,
+      'author_id': authorId,
+      'text': text,
+      'file_url': fileUrl,
       'created_at': createdAt.toIso8601String(),
     };
   }
-
-  @override
-  String toString() {
-    return 'MessageModel(id: $id, userId: $userId, chatId: $chatId, content: $content, mediaUrl: $mediaUrl, createdAt: $createdAt)';
-  }
-
 }

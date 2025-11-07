@@ -1,36 +1,26 @@
 name: chat_app
-description: Um aplicativo de chat em tempo real com Supabase.
-publish_to: "none"
-
+description: Chat app Flutter + Supabase
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=2.18.0 <4.0.0"
+  flutter: ">=3.7.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  # Supabase para autenticação, banco de dados e realtime
+  cupertino_icons: ^1.0.2
   supabase_flutter: ^2.10.3
-
-  # Gerenciamento de estado e navegação
-  flutter_riverpod: ^2.5.1
-
-  # Exibição de imagens
-  cached_network_image: ^3.3.1
-
-  # UI
-  google_fonts: ^6.2.1
-
-  # Utilitários opcionais
-  intl: ^0.19.0
-  fluttertoast: ^9.0.0
+  provider: ^6.0.5
+  uuid: ^3.0.7
+  image_picker: ^0.8.7+5
+  fluttertoast: ^8.2.1
+  http: ^0.13.6
+  path_provider: ^2.0.13
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
-
-flutter:
-  uses-material-design: true
+  flutter_lints: ^2.0.0

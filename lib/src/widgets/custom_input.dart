@@ -2,53 +2,57 @@ import 'package:flutter/material.dart';
 
 /// Campo de entrada customizado reutilizável
 class CustomInput extends StatelessWidget {
-  /// Construtor da classe [CustomInput]
-  const CustomInput({
-    required this.label,
-    required this.hint,
-    required this.controller,
-    super.key,
-    this.validator,
-    this.obsecureText = false,
-  });
-
-  /// Construtor da classe [CustomInput]
+  /// Rótulo exibido acima do campo
   final String label;
 
-  /// Texto de dica exibido no campo
+  /// Texto de dica exibido dentro do campo
   final String hint;
 
   /// Controlador do campo de entrada
   final TextEditingController controller;
 
-  /// Função de validação do campo
+  /// Função de validação (opcional)
   final String? Function(String?)? validator;
 
   /// Indica se o texto deve ser ocultado (para senhas)
-  final bool obsecureText;
+  final bool obscureText;
+
+  /// Ícone à direita (ex: olhinho)
+  final Widget? suffixIcon;
+
+  /// Tipo de teclado (email, texto, número, etc.)
+  final TextInputType? keyboardType;
+
+  const CustomInput({
+    super.key,
+    required this.label,
+    required this.hint,
+    required this.controller,
+    this.validator,
+    this.obscureText = false,
+    this.suffixIcon,
+    this.keyboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, child) {
-        // debug: print controller empty state
-        // print('[DEBUG] controller: ${value.text.isEmpty}');
+        final bool isEmpty = value.text.isEmpty;
+
         return SizedBox(
           height: 68,
           child: TextFormField(
-            obscureText: obsecureText,
-            validator: validator,
             controller: controller,
+            validator: validator,
+            obscureText: obscureText,
+            keyboardType: keyboardType,
             decoration: InputDecoration(
-              // border: OutlineInputBorder(
-              //   borderRadius: BorderRadius.circular(8.0),
-              //   borderSide: BorderSide(color: Colors.red, width: 2.0),
-              // ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: value.text.isEmpty ? Colors.grey : Colors.blue,
+                  color: isEmpty ? Colors.grey : Colors.blue,
                   width: 2,
                 ),
               ),
@@ -65,7 +69,8 @@ class CustomInput extends StatelessWidget {
                 borderSide: const BorderSide(color: Colors.red, width: 2.5),
               ),
               labelText: label,
-              hint: Text(hint),
+              hintText: hint,
+              suffixIcon: suffixIcon, // ✅ agora existe
               fillColor: Colors.white,
               filled: true,
             ),

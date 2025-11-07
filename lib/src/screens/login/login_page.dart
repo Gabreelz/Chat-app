@@ -1,104 +1,165 @@
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
-import 'package:chat_app/src/widgets/custom_input.dart.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// TODO: Implementar obscurecer senha
-// TODO: Implementar olhinho de visualizar senha
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
 
-/// Tela de login
-class LoginScreen extends StatelessWidget {
-  /// Construtor da classe [LoginScreen]
-  LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
 
-  /// Controlador do campo de email
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
-
-  /// Controlador do campo de senha
   final TextEditingController passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  Future<void> _signIn(BuildContext context) async {
+    final supabase = Supabase.instance.client;
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (response.user != null && mounted) {
+        Navigator.pushReplacementNamed(context, RoutesEnum.home.route);
+      } else {
+        _showError('Usuário ou senha inválidos.');
+      }
+    } catch (e) {
+      _showError('Erro ao entrar: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F5FF), // Fundo suave lilás
       body: Center(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: SizedBox(
-                    width:
-                        constraints.maxWidth > 768 ? 768 : constraints.maxWidth,
-                    child: Column(
-                      children: [
-                        const Image(
-                          image: AssetImage('assets/logos/logo_login.png'),
-                          height: 280,
-                        ),
-                        const SizedBox(height: 18),
-                        const SizedBox(
-                          width: double.infinity,
-                          child: Text('Login', style: TextStyle(fontSize: 20)),
-                        ),
-                        const SizedBox(height: 18),
-                        CustomInput(
-                          hint: 'Digite seu email',
-                          label: 'Email',
-                          controller: emailController,
-                        ),
-                        const SizedBox(height: 18),
-                        CustomInput(
-                          hint: 'Digite sua senha',
-                          label: 'Senha',
-                          controller: passwordController,
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: CustomTextButton(
-                            buttonText: 'Esqueci minha senha',
-                            buttonAction: () {},
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        CustomButton(
-                          buttonText: 'Entrar',
-                          backgroundColor: const Color(0xFF03A9F4),
-                          buttonAction: () async {
-                            final navigator = Navigator.of(context);
-                            final supabase = Supabase.instance.client;
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo do app
+                Image.asset(
+                  'assets/logos/logo_login.png',
+                  height: 180,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.blue,
+                    size: 120,
+                  ),
+                ),
+                const SizedBox(height: 24),
 
-                            final response =
-                                await supabase.auth.signInWithPassword(
-                              password: passwordController.text,
-                              email: emailController.text,
-                            );
-
-                            debugPrint(response.user.toString());
-                            await navigator.pushReplacementNamed(
-                              RoutesEnum.home.route,
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 18),
-                        CustomTextButton(
-                          buttonText: 'Não tem uma conta? Cadastre-se',
-                          buttonAction: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              RoutesEnum.register.route,
-                            ); // Named route
-                          },
-                        ),
-                      ],
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2E2E2E),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 18),
+
+                // Campo de email
+                CustomInput(
+                  hint: 'Digite seu email',
+                  label: 'Email',
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 18),
+
+                // Campo de senha com "olhinho"
+                CustomInput(
+                  hint: 'Digite sua senha',
+                  label: 'Senha',
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey[700],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                ),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text(
+                      'Esqueci minha senha',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF1565C0),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Botão de login
+                CustomButton(
+                  buttonText: _isLoading ? 'Entrando...' : 'Entrar',
+                  backgroundColor: const Color(0xFF03A9F4),
+                  buttonAction: _isLoading ? null : () => _signIn(context),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Link para cadastro
+                GestureDetector(
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    RoutesEnum.register.route,
+                  ),
+                  child: const Text(
+                    'Não tem uma conta? Cadastre-se',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF1565C0),
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 
-/// Botão customizado reutilizável
 class CustomButton extends StatelessWidget {
-  /// Construtor da classe [CustomButton]
-  const CustomButton({
-    required this.backgroundColor,
-    required this.buttonText,
-    required this.buttonAction,
-    super.key,
-    this.icon,
-  });
-
   /// Cor de fundo do botão
   final Color backgroundColor;
 
-  /// Texto exibido no botão
   final String buttonText;
 
-  /// Ação executada ao pressionar o botão
-  final VoidCallback buttonAction;
+  final VoidCallback? buttonAction;
 
-  /// Ícone exibido no botão
   final IconData? icon;
+
+  /// Construtor da classe [CustomButton]
+  const CustomButton({
+    super.key,
+    required this.backgroundColor,
+    required this.buttonText,
+    required this.buttonAction,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +25,29 @@ class CustomButton extends StatelessWidget {
       height: 52,
       width: double.infinity,
       child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white),
+        icon: icon != null
+            ? Icon(icon, color: Colors.white)
+            : const SizedBox.shrink(),
         label: Text(
           buttonText,
-          style: const TextStyle(color: Colors.white, fontSize: 20),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         style: ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(backgroundColor),
-          shape: WidgetStatePropertyAll(
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: MaterialStatePropertyAll(
+            buttonAction == null
+                ? backgroundColor.withOpacity(0.6) // botão desabilitado
+                : backgroundColor,
           ),
+          shape: MaterialStatePropertyAll(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          elevation: const MaterialStatePropertyAll(3),
         ),
         onPressed: buttonAction,
       ),

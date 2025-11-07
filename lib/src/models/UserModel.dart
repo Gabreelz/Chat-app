@@ -1,43 +1,38 @@
-// user_model.dart
-
+// lib/src/models/UserModel.dart
 class UserModel {
   final String id;
-  final String name;
   final String email;
+  final String name;
   final String? avatarUrl;
-  final DateTime createAt; 
+  final DateTime? createdAt;
 
   UserModel({
     required this.id,
-    required this.name,
     required this.email,
+    required this.name,
     this.avatarUrl,
-    required this.createAt,
+    this.createdAt,
   });
 
-  // Supabase
-  factory UserModel.fromMap(Map<String, dynamic> map) {
+  factory UserModel.fromMap(Map<String, dynamic> m) {
     return UserModel(
-      id: map['id'] ?? '',
-      name: map['name'] ?? '',
-      email: map['email'] ?? '',
-      avatarUrl: map['avatar_url'],
-      createAt: DateTime.parse(map['created_at']),
+      id: m['id'] ?? m['user_id'] ?? '',
+      email: m['email'] ?? '',
+      name: m['name'] ?? '',
+      avatarUrl: m['avatar_url'],
+      createdAt: m['created_at'] == null
+          ? null
+          : DateTime.parse(m['created_at']),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': name,
       'email': email,
+      'name': name,
       'avatar_url': avatarUrl,
-      'created_at': createAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
     };
-  }
-
-  @override
-  String toString() {
-    return 'UserModel(id: $id, name: $name, email: $email, avatarUrl: $avatarUrl, createAt: $createAt)';
   }
 }
