@@ -1,13 +1,14 @@
+import 'package:chat_app/src/screens/chat/chat_list_page.dart'; 
+import 'package:chat_app/src/screens/chat/new_chat_page.dart'; 
 import 'package:chat_app/src/screens/home/home_page.dart';
 import 'package:chat_app/src/screens/login/signup_page.dart';
+import 'package:chat_app/src/theme/app_theme.dart'; 
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Atualize para os caminhos corretos do seu projeto
 import 'package:chat_app/src/screens/login/login_page.dart';
-import 'package:chat_app/src/screens/chat/chat_list_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,10 +32,18 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       builder: FToastBuilder(),
+      
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, 
+
       routes: {
         RoutesEnum.login.route: (context) => LoginScreen(),
         RoutesEnum.register.route: (context) => const RegisterScreen(),
         RoutesEnum.home.route: (context) => const HomeScreen(),
+
+        RoutesEnum.chatList.route: (context) => const ChatListPage(),
+        RoutesEnum.newChat.route: (context) => const NewChatScreen(),
       },
       initialRoute: RoutesEnum.login.route,
     );

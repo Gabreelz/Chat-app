@@ -9,7 +9,7 @@ class ConversationModel {
     final DateTime createAt;
     final List<String> participanteId;
     final List<UserModel>? participantes;
-    final List<messageModel>? message;
+    final List<MessageModel>? message;
 
   ConversationModel({
     required this.id,
@@ -31,8 +31,8 @@ class ConversationModel {
               map['participantes'].map((u) => UserModel.fromMap(u)))
           : null,
       message: map['message'] != null
-          ? List<messageModel>.from(
-              map['message'].map((m) => messageModel.fromMap(m)))
+          ? List<MessageModel>.from(
+              map['message'].map((m) => MessageModel.fromMap(m)))
           : null,
     );
   }

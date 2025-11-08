@@ -1,17 +1,21 @@
-/// Enumeração das rotas da aplicação
+
 enum RoutesEnum {
-  /// Rota de login
   login('/login'),
 
-  /// Rota de registro
   register('/register'),
 
-  /// Rota inicial
-  home('/home');
+  home('/home'),
+
+
+  newChat('/new_chat'),
+  
+
+  chatList('/chat_list');
+
 
   /// Construtor da enumeração [RoutesEnum]
   const RoutesEnum(this.route);
 
-  /// Caminho da rota
+
   final String route;
 }

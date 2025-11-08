@@ -1,46 +1,32 @@
 import 'package:flutter/material.dart';
 
-/// Campo de entrada customizado reutilizável
 class CustomInput extends StatelessWidget {
-  /// Rótulo exibido acima do campo
-  final String label;
-
-  /// Texto de dica exibido dentro do campo
-  final String hint;
-
-  /// Controlador do campo de entrada
-  final TextEditingController controller;
-
-  /// Função de validação (opcional)
-  final String? Function(String?)? validator;
-
-  /// Indica se o texto deve ser ocultado (para senhas)
-  final bool obscureText;
-
-  /// Ícone à direita (ex: olhinho)
-  final Widget? suffixIcon;
-
-  /// Tipo de teclado (email, texto, número, etc.)
-  final TextInputType? keyboardType;
-
   const CustomInput({
-    super.key,
+    Key? key,
     required this.label,
     required this.hint,
     required this.controller,
     this.validator,
     this.obscureText = false,
-    this.suffixIcon,
     this.keyboardType,
-  });
+    this.suffixIcon, // 👈 novo parâmetro
+  }) : super(key: key);
+
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final String? Function(String?)? validator;
+  final bool obscureText;
+  final TextInputType? keyboardType;
+  final Widget? suffixIcon; // 👈 novo atributo (ícone no fim do campo)
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, child) {
-        final bool isEmpty = value.text.isEmpty;
-
         return SizedBox(
           height: 68,
           child: TextFormField(
@@ -49,10 +35,13 @@ class CustomInput extends StatelessWidget {
             obscureText: obscureText,
             keyboardType: keyboardType,
             decoration: InputDecoration(
+              suffixIcon: suffixIcon, // 👈 agora funciona!
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                  color: isEmpty ? Colors.grey : Colors.blue,
+                  color: value.text.isEmpty
+                      ? theme.colorScheme.onSurface.withOpacity(0.4)
+                      : Colors.blue,
                   width: 2,
                 ),
               ),
@@ -69,9 +58,14 @@ class CustomInput extends StatelessWidget {
                 borderSide: const BorderSide(color: Colors.red, width: 2.5),
               ),
               labelText: label,
+              labelStyle: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.7),
+              ),
               hintText: hint,
-              suffixIcon: suffixIcon, // ✅ agora existe
-              fillColor: Colors.white,
+              hintStyle: TextStyle(
+                color: theme.colorScheme.onSurface.withOpacity(0.4),
+              ),
+              fillColor: theme.colorScheme.surface,
               filled: true,
             ),
           ),
