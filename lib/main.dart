@@ -6,10 +6,14 @@ import 'package:chat_app/src/theme/app_theme.dart';
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:chat_app/src/screens/login/login_page.dart';
-import 'package:chat_app/src/screens/chat/chat_page.dart'; // Importar ChatPage
+import 'package:chat_app/src/screens/chat/chat_page.dart';
+import 'package:chat_app/src/provaders/auth_provider.dart';
+import 'package:chat_app/src/provaders/chat_provider.dart';
+import 'package:chat_app/src/provaders/new_chat_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,24 +33,37 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      builder: FToastBuilder(),
-      
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, 
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ChatProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => NewChatProvider(),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        builder: FToastBuilder(),
+        
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system, 
 
-      routes: {
-        RoutesEnum.login.route: (context) => LoginScreen(),
-        RoutesEnum.register.route: (context) => const RegisterScreen(),
-        RoutesEnum.home.route: (context) => const HomeScreen(),
+        routes: {
+          RoutesEnum.login.route: (context) => LoginScreen(),
+          RoutesEnum.register.route: (context) => const RegisterScreen(),
+          RoutesEnum.home.route: (context) => const HomeScreen(),
 
-        RoutesEnum.chatList.route: (context) => const ChatListPage(),
-        RoutesEnum.newChat.route: (context) => const NewChatScreen(),
-        RoutesEnum.chatPage.route: (context) => const ChatPage(), // Adicionado
-      },
-      initialRoute: RoutesEnum.login.route,
+          RoutesEnum.chatList.route: (context) => const ChatListPage(),
+          RoutesEnum.newChat.route: (context) => const NewChatScreen(),
+          RoutesEnum.chatPage.route: (context) => const ChatPage(),
+        },
+        initialRoute: RoutesEnum.login.route,
+      ),
     );
   }
 }

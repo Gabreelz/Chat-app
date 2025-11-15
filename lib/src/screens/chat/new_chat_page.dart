@@ -1,100 +1,85 @@
-import 'package:chat_app/src/models/UserModel.dart';
-import 'package:chat_app/src/utils/routes_enum.dart';
-import 'package:chat_app/src/widgets/custom_avatar.dart';
-import 'package:chat_app/src/widgets/custom_input.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:chat_app/src/provaders/new_chat_provider.dart';
+import 'package:chat_app/src/models/UserModel.dart';
+import 'package:chat_app/src/widgets/custom_avatar.dart';
 
-class NewChatScreen extends StatefulWidget {
-  const NewChatScreen({super.key});
+class NewChatPage extends StatefulWidget {
+  const NewChatPage({super.key});
 
   @override
-  State<NewChatScreen> createState() => _NewChatScreenState();
+  State<NewChatPage> createState() => _NewChatPageState();
 }
 
-class _NewChatScreenState extends State<NewChatScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final _supabase = Supabase.instance.client;
-  late Future<List<UserModel>> _usersFuture;
-  String _searchQuery = '';
+class _NewChatPageState extends State<NewChatPage> {
+  final searchCtrl = TextEditingController();
+  late NewChatProvider newChatProvider;
 
   @override
   void initState() {
     super.initState();
-    _usersFuture = _fetchUsers();
-    _searchController.addListener(() {
-      setState(() {
-        _searchQuery = _searchController.text.toLowerCase();
-      });
-    });
+    newChatProvider = Provider.of<NewChatProvider>(context, listen: false);
+    newChatProvider.loadAllUsers();
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    searchCtrl.dispose();
     super.dispose();
   }
 
-  Future<List<UserModel>> _fetchUsers() async {
-    try {
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) throw Exception('Não autenticado');
+  Future<void> _startNewChat(UserModel otherUser) async {
+    final supabase = Supabase.instance.client;
+    final currentUserId = supabase.auth.currentUser?.id ?? '';
 
-      final response = await _supabase
-          .from('users')
+    try {
+      // Criar ou obter conversa existente
+      final conversationResponse = await supabase
+          .from('conversations')
           .select()
-          .neq('id', currentUserId);
+          .or('(user_id1.eq.$currentUserId,user_id2.eq.${otherUser.id}),(user_id1.eq.${otherUser.id},user_id2.eq.$currentUserId)')
+          .maybeSingle();
 
-      return (response as List)
-          .map((data) => UserModel.fromMap(data))
-          .toList();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao buscar usuários: $e')),
-        );
+      String conversationId;
+
+      if (conversationResponse == null) {
+        // Criar nova conversa
+        final newConversation = await supabase
+            .from('conversations')
+            .insert({
+              'user_id1': currentUserId,
+              'user_id2': otherUser.id,
+              'created_at': DateTime.now().toIso8601String(),
+            })
+            .select()
+            .single();
+
+        conversationId = newConversation['id'];
+      } else {
+        conversationId = conversationResponse['id'];
       }
-      return [];
-    }
-  }
 
-  Future<void> _navigateToChat(UserModel user) async {
-    if (!mounted) return;
-
-    final navigator = Navigator.of(context);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      final String conversationId = await _supabase.rpc(
-        'find_or_create_conversation',
-        params: {'other_user_id': user.id},
-      );
-
-      navigator.pop(); // Remove o loading
-
+      // Navegar para chat
       if (mounted) {
-        navigator.pushReplacementNamed(
-          RoutesEnum.chatPage.route,
+        Navigator.pushNamed(
+          context,
+          '/chat',
           arguments: {
             'conversationId': conversationId,
-            'otherUserId': user.id,
-            'otherUserName': user.name,
-            'otherUserAvatarUrl': user.avatarUrl,
+            'otherUserId': otherUser.id,
+            'otherUserName': otherUser.name,
+            'otherUserAvatarUrl': otherUser.avatar_url,
           },
         );
       }
     } catch (e) {
-      navigator.pop(); // Remove o loading em caso de erro
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao iniciar conversa: $e')),
         );
       }
+      print('Erro ao criar/obter conversa: $e');
     }
   }
 
@@ -102,60 +87,83 @@ class _NewChatScreenState extends State<NewChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nova Conversa'),
+        title: const Text('Novo Chat'),
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: CustomInput(
-              label: 'Buscar',
-              hint: 'Buscar por nome ou email...',
-              controller: _searchController,
-            ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<UserModel>>(
-              future: _usersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Erro: ${snapshot.error}'));
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Nenhum usuário encontrado'));
-                }
+      body: Consumer<NewChatProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                final users = snapshot.data!.where((user) {
-                  final nameMatch =
-                      user.name.toLowerCase().contains(_searchQuery);
-                  final emailMatch =
-                      user.email.toLowerCase().contains(_searchQuery);
-                  return nameMatch || emailMatch;
-                }).toList();
+          if (provider.filteredUsers.isEmpty && provider.searchQuery.isEmpty) {
+            return const Center(child: Text('Nenhum usuário disponível'));
+          }
 
-                return ListView.builder(
-                  itemCount: users.length,
+          if (provider.filteredUsers.isEmpty) {
+            return Center(
+              child: Text('Nenhum usuário encontrado para "${provider.searchQuery}"'),
+            );
+          }
+
+          return Column(
+            children: [
+              // Barra de pesquisa
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: searchCtrl,
+                  onChanged: (value) => provider.searchUsers(value),
+                  decoration: InputDecoration(
+                    hintText: 'Pesquisar usuários',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: searchCtrl.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              searchCtrl.clear();
+                              provider.clearSearch();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  onTap: () {
+                    searchCtrl.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: searchCtrl.text.length,
+                    );
+                  },
+                ),
+              ),
+              // Lista de usuários
+              Expanded(
+                child: ListView.builder(
+                  itemCount: provider.filteredUsers.length,
                   itemBuilder: (context, index) {
-                    final user = users[index];
+                    final user = provider.filteredUsers[index];
                     return ListTile(
                       leading: CustomAvatar(
+                        imageUrl: user.avatar_url,
                         name: user.name,
-                        imageUrl: user.avatarUrl,
-                        radius: 22,
+                        radius: 24,
                       ),
                       title: Text(user.name),
                       subtitle: Text(user.email),
-                      onTap: () => _navigateToChat(user),
+                      onTap: () => _startNewChat(user),
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
