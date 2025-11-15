@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RealtimeService {
   final SupabaseClient supabase = Supabase.instance.client;
-  
+
   late RealtimeChannel _messageChannel;
   late RealtimeChannel _presenceChannel;
 
@@ -14,21 +14,22 @@ class RealtimeService {
     Function(dynamic) onMessageReceived,
   ) {
     _messageChannel = supabase.channel('messages:$conversationId');
-    
+
     _messageChannel
         .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'messages',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'conversation_id',
-            value: conversationId,
-          ),
-        )
-        .subscribe((payload, [ref]) {
-          onMessageReceived(payload);
-        });
+      event: PostgresChangeEvent.all,
+      schema: 'public',
+      table: 'messages',
+      filter: PostgresChangeFilter(
+        type: PostgresChangeFilterType.eq,
+        column: 'conversation_id',
+        value: conversationId,
+      ),
+      callback: (payload, [ref]) { // CORRIGIDO: callback é um parâmetro nomeado
+        onMessageReceived(payload);
+      },
+    )
+        .subscribe(); // CORRIGIDO: subscribe() é chamado no final
   }
 
   // Listener para status de digitação
@@ -41,17 +42,24 @@ class RealtimeService {
     _presenceChannel.onPresenceSync((_) {
       // Sync de presença
     }).onPresenceJoin((payload) {
-      final userId = payload['user_id'] as String?;
-      if (userId != null) {
-        onTypingStatusChanged(userId, true);
+      // CORRIGIDO: Iterar sobre newPresences (o payload não é mais um Map)
+      for (final presence in payload.newPresences) {
+        final userId = presence.payload['user_id'] as String?;
+        if (userId != null) {
+          onTypingStatusChanged(userId, true);
+        }
       }
     }).onPresenceLeave((payload) {
-      final userId = payload['user_id'] as String?;
-      if (userId != null) {
-        onTypingStatusChanged(userId, false);
+      // CORRIGIDO: Iterar sobre leftPresences (o payload não é mais um Map)
+      for (final presence in payload.leftPresences) {
+        final userId = presence.payload['user_id'] as String?;
+        if (userId != null) {
+          onTypingStatusChanged(userId, false);
+        }
       }
     }).subscribe((status, [ref]) async {
-      if (status == RealtimeSubscriptionStatus.subscribed) {
+      // CORRIGIDO: O enum foi renomeado para RealtimeSubscribeStatus
+      if (status == RealtimeSubscribeStatus.subscribed) {
         final userId = supabase.auth.currentUser?.id ?? '';
         await _presenceChannel.track({
           'user_id': userId,
@@ -65,7 +73,7 @@ class RealtimeService {
   Future<void> sendTypingStatus(String conversationId, bool isTyping) async {
     try {
       final userId = supabase.auth.currentUser?.id ?? '';
-      
+
       if (isTyping) {
         await supabase.channel('typing:$conversationId').track({
           'user_id': userId,
@@ -105,11 +113,11 @@ class RealtimeService {
         .stream(primaryKey: ['id'])
         .eq('id', userId)
         .listen((List<Map<String, dynamic>> data) {
-          if (data.isNotEmpty) {
-            final isOnline = data.first['is_online'] as bool? ?? false;
-            onStatusChanged(isOnline);
-          }
-        });
+      if (data.isNotEmpty) {
+        final isOnline = data.first['is_online'] as bool? ?? false;
+        onStatusChanged(isOnline);
+      }
+    });
   }
 
   // Obter último status online do usuário

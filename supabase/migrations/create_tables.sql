@@ -1,4 +1,3 @@
-
 create table public.users (
   id uuid references auth.users not null primary key, -- Chave estrangeira para o usuário autenticado
   name text,
@@ -59,3 +58,42 @@ create policy "Ver mensagens apenas se for participante" on public.messages
       and p.user_id = auth.uid()
     )
   );
+
+-- Função para encontrar ou criar uma conversa 1-para-1
+create or replace function public.find_or_create_conversation(other_user_id uuid)
+returns uuid
+language plpgsql
+security definer
+as $$
+declare
+  existing_conversation_id uuid;
+  new_conversation_id uuid;
+  current_user_id uuid := auth.uid();
+begin
+  -- 1. Tentar encontrar uma conversa 1-para-1 existente
+  select c.id into existing_conversation_id
+  from conversations c
+  join participants p1 on p1.conversation_id = c.id
+  join participants p2 on p2.conversation_id = c.id
+  where c.is_group = false
+    and p1.user_id = current_user_id
+    and p2.user_id = other_user_id;
+
+  -- 2. Se encontrada, retorna o ID
+  if existing_conversation_id is not null then
+    return existing_conversation_id;
+  end if;
+
+  -- 3. Se não, cria uma nova conversa
+  insert into public.conversations (name, is_group)
+  values (null, false)
+  returning id into new_conversation_id;
+
+  -- 4. Adiciona os participantes
+  insert into public.participants (conversation_id, user_id)
+  values (new_conversation_id, current_user_id),
+         (new_conversation_id, other_user_id);
+
+  return new_conversation_id;
+end;
+$$;

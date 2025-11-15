@@ -58,7 +58,7 @@ class MessageService {
           .from('messages')
           .select()
           .eq('conversation_id', conversationId)
-          .is_('deleted_at', null)
+          .isFilter('deleted_at', null) // CORRIGIDO: de .is_ para .isFilter
           .order('created_at', ascending: true) as List<dynamic>;
 
       final list = response.cast<Map<String, dynamic>>();
@@ -138,7 +138,7 @@ class MessageService {
           .update({'is_read': true})
           .eq('conversation_id', conversationId)
           .neq('author_id', userId)
-          .is_('deleted_at', null);
+          .isFilter('deleted_at', null); // CORRIGIDO: de .is_ para .isFilter
       return true;
     } catch (e) {
       print('Erro ao marcar todas como lidas: $e');

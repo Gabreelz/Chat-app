@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:chat_app/src/widgets/custom_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,6 +17,9 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   late String conversationId;
   late String otherUserId;
+  String? otherUserName;
+  String? otherUserAvatarUrl;
+
   final supabase = Supabase.instance.client;
   final textCtrl = TextEditingController();
   bool loading = false;
@@ -29,7 +33,9 @@ class _ChatPageState extends State<ChatPage> {
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     conversationId = args?['conversationId'] ?? '';
     otherUserId = args?['otherUserId'] ?? '';
-    
+    otherUserName = args?['otherUserName']; // Captura o nome
+    otherUserAvatarUrl = args?['otherUserAvatarUrl']; // Captura o avatar
+
     chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.loadMessages(conversationId, otherUserId: otherUserId);
   }
@@ -184,12 +190,13 @@ class _ChatPageState extends State<ChatPage> {
         ],
       ),
     );
-    editCtrl.dispose();
+    // O dispose estava no lugar errado, movido para fora do builder
+    // editCtrl.dispose();
   }
 
   String _formatLastSeen(DateTime? lastSeen) {
     if (lastSeen == null) return 'offline';
-    
+
     final now = DateTime.now();
     final diff = now.difference(lastSeen);
 
@@ -292,15 +299,26 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = supabase.auth.currentUser?.id ?? '';
-    
+
     return Scaffold(
       appBar: AppBar(
+        // Adiciona o Avatar
+        leadingWidth: 40,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8.0),
+          child: CustomAvatar(
+            name: otherUserName ?? '?',
+            imageUrl: otherUserAvatarUrl,
+            radius: 18,
+          ),
+        ),
         title: Consumer<ChatProvider>(
           builder: (context, provider, _) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Chat'),
+                // Usa o nome do usuário recebido por argumento
+                Text(otherUserName ?? 'Chat'), 
                 const SizedBox(height: 4),
                 Text(
                   provider.otherUserIsOnline
@@ -324,7 +342,8 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: Consumer<ChatProvider>(
               builder: (context, provider, _) {
-                WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _scrollToBottom());
                 final msgs = provider.messages;
                 final isSomeoneTyping = provider.typingUsers.entries
                     .any((e) => e.value && e.key != currentUserId);

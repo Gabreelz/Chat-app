@@ -1,14 +1,15 @@
-import 'package:chat_app/src/screens/chat/chat_list_page.dart'; 
-import 'package:chat_app/src/screens/chat/new_chat_page.dart'; 
+import 'package:chat_app/src/screens/chat/chat_list_page.dart';
+import 'package:chat_app/src/screens/chat/new_chat_page.dart';
 import 'package:chat_app/src/screens/home/home_page.dart';
 import 'package:chat_app/src/screens/login/signup_page.dart';
-import 'package:chat_app/src/theme/app_theme.dart'; 
+import 'package:chat_app/src/theme/app_theme.dart';
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:chat_app/src/screens/login/login_page.dart';
+import 'package:chat_app/src/screens/chat/chat_page.dart'; // Importar ChatPage
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,7 +23,6 @@ void main() async {
   runApp(const MainApp());
 }
 
-/// Aplicação principal
 class MainApp extends StatelessWidget {
   /// Construtor da classe [MainApp]
   const MainApp({super.key});
@@ -44,6 +44,7 @@ class MainApp extends StatelessWidget {
 
         RoutesEnum.chatList.route: (context) => const ChatListPage(),
         RoutesEnum.newChat.route: (context) => const NewChatScreen(),
+        RoutesEnum.chatPage.route: (context) => const ChatPage(), // Adicionado
       },
       initialRoute: RoutesEnum.login.route,
     );
