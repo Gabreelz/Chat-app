@@ -29,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.user != null && mounted) {
-        Navigator.pushReplacementNamed(context, RoutesEnum.home.route);
+        Navigator.pushNamed(context, RoutesEnum.chatList.route);
       } else {
         _showError('Usuário ou senha inválidos.');
       }
@@ -63,14 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 // Logo do app
                 Image.asset(
-                  'assets/logos/logo_login.png',
+                  'assets/icons/logoP.png',
                   height: 180,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.chat_bubble_outline,
-                    color: Colors.blue,
-                    size: 120,
-                  ),
                 ),
+
                 const SizedBox(height: 24),
 
                 const Align(
@@ -101,18 +97,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: 'Senha',
                   controller: passwordController,
                   obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                      color: Colors.grey[700],
-                    ),
-                    onPressed: () {
+                  suffixIcon: GestureDetector(
+                    onTap: () {
                       setState(() {
                         _obscurePassword = !_obscurePassword;
                       });
                     },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Image.asset(
+                        _obscurePassword
+                            ? 'assets/icons/olhoR.png'
+                            : 'assets/icons/olho.png',
+                        width: 24,
+                        height: 24,
+                      ),
+                    ),
                   ),
                 ),
 

@@ -1,7 +1,7 @@
 import 'package:chat_app/src/models/registerViewModel.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
-import 'package:chat_app/src/widgets/custom_input.dart.dart';
+import 'package:chat_app/src/widgets/custom_text_button.dart';
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -67,7 +67,7 @@ class _FormWidgetState extends State<FormWidget> {
         children: [
           // Logo
           const Image(
-            image: AssetImage('assets/logos/logo_login.png'),
+            image: AssetImage('assets/icons/logoP.png'),
             height: 220,
           ),
           const SizedBox(height: 8),
@@ -103,7 +103,6 @@ class _FormWidgetState extends State<FormWidget> {
           ),
           const SizedBox(height: 18),
 
-          // Senha com olhinho
           CustomInput(
             hint: 'Digite sua senha',
             label: 'Senha',
@@ -111,20 +110,22 @@ class _FormWidgetState extends State<FormWidget> {
             obscureText: _obscurePassword,
             validator: (value) => widget.viewModel.passwordValidator(value),
             suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey[700],
-              ),
               onPressed: () {
                 setState(() {
                   _obscurePassword = !_obscurePassword;
                 });
               },
+              icon: Image.asset(
+                _obscurePassword
+                    ? 'assets/icons/olhoR.png'
+                    : 'assets/icons/olho.png',
+                width: 22,
+                height: 22,
+              ),
             ),
           ),
           const SizedBox(height: 18),
 
-          // Confirmação da senha com olhinho
           CustomInput(
             hint: 'Confirme sua senha',
             label: 'Confirmação da senha',
@@ -133,17 +134,18 @@ class _FormWidgetState extends State<FormWidget> {
             validator: (value) =>
                 widget.viewModel.passwordConfirmationValidator(value),
             suffixIcon: IconButton(
-              icon: Icon(
-                _obscureConfirmPassword
-                    ? Icons.visibility_off
-                    : Icons.visibility,
-                color: Colors.grey[700],
-              ),
               onPressed: () {
                 setState(() {
                   _obscureConfirmPassword = !_obscureConfirmPassword;
                 });
               },
+              icon: Image.asset(
+                _obscureConfirmPassword
+                    ? 'assets/icons/olhoR.png'
+                    : 'assets/icons/olho.png',
+                width: 22,
+                height: 22,
+              ),
             ),
           ),
           const SizedBox(height: 24),

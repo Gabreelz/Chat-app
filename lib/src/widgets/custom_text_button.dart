@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
 
-/// Botão de texto customizado reutilizável
 class CustomTextButton extends StatelessWidget {
-  /// Construtor da classe [CustomTextButton]
   const CustomTextButton({
     required this.buttonText,
     required this.buttonAction,
-    super.key,
+    Key? key,
     this.icon,
-  });
+  }) : super(key: key);
 
-  /// Construtor da classe [CustomTextButton]
+  /// Texto exibido no botão
   final String buttonText;
 
-  /// Ação executada ao pressionar o botão
+  /// Ação ao clicar no botão
   final VoidCallback? buttonAction;
 
-  /// Ícone exibido no botão
+  /// Ícone opcional ao lado do texto
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return TextButton.icon(
       onPressed: buttonAction,
-      icon: Icon(icon, color: const Color(0xFF0F4888)),
-      label: Text(buttonText, style: const TextStyle(color: Color(0xFF0F4888))),
+      icon: Icon(
+        icon,
+        color: const Color(0xFF0F4888),
+      ),
+      label: Text(
+        buttonText,
+        style: const TextStyle(color: Color(0xFF0F4888)),
+      ),
     );
   }
 }
