@@ -1,3 +1,4 @@
+// ...existing code...
 import 'package:chat_app/src/provaders/chat_list_provider.dart'; // <-- A IMPORTAÇÃO QUE FALTA
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:chat_app/src/widgets/custom_avatar.dart';
@@ -18,7 +19,6 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void initState() {
     super.initState();
-    // Carregar as conversas reais ao iniciar a tela
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ChatListProvider>(context, listen: false).loadConversations();
     });
@@ -57,10 +57,8 @@ class _ChatListPageState extends State<ChatListPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline), 
-            onPressed: () {
-              // A página de perfil ainda está vazia [cite: lib/src/screens/profile/profile_page.dart]
-            },
+            icon: const Icon(Icons.person_outline),
+            onPressed: () {},
           )
         ],
       ),
@@ -106,7 +104,7 @@ class _ChatListPageState extends State<ChatListPage> {
         final time = conversation.lastMessageTimestamp;
         final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
-        String lastMessageText = conversation.lastMessageText ?? '...';
+        String lastMessageText = (conversation.lastMessageText ?? '...');
         if (conversation.lastMessageAuthorId == currentUserId &&
             lastMessageText != '...') {
           lastMessageText = 'Você: $lastMessageText';
@@ -116,12 +114,12 @@ class _ChatListPageState extends State<ChatListPage> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           leading: CustomAvatar(
-            name: conversation.otherUserName,
-            imageUrl: conversation.otherUserAvatarUrl,
+            name: conversation.otherUserName ?? '',
+            imageUrl: conversation.otherUserAvatarUrl ?? '',
             radius: 26,
           ),
           title: Text(
-            conversation.otherUserName,
+            conversation.otherUserName ?? 'Usuário',
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
           subtitle: Text(
@@ -141,12 +139,12 @@ class _ChatListPageState extends State<ChatListPage> {
           onTap: () {
             Navigator.pushNamed(
               context,
-              RoutesEnum.chatPage.route, // Navega para a página de chat
+              RoutesEnum.chatPage.route,
               arguments: {
                 'conversationId': conversation.conversationId,
-                'otherUserId': conversation.otherUserId,
-                'otherUserName': conversation.otherUserName,
-                'otherUserAvatarUrl': conversation.otherUserAvatarUrl,
+                'otherUserId': conversation.otherUserId ?? '',
+                'otherUserName': conversation.otherUserName ?? '',
+                'otherUserAvatarUrl': conversation.otherUserAvatarUrl ?? '',
               },
             );
           },
