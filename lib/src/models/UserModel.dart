@@ -1,4 +1,3 @@
-// lib/src/models/UserModel.dart
 class UserModel {
   final String id;
   final String email;
@@ -18,7 +17,7 @@ class UserModel {
     return UserModel(
       id: m['id'] ?? m['user_id'] ?? '',
       email: m['email'] ?? '',
-      name: m['name'] ?? '',
+      name: m['name'] ?? 'Usuário', // Adicionado fallback
       avatarUrl: m['avatar_url'],
       createdAt: m['created_at'] == null
           ? null
@@ -34,5 +33,22 @@ class UserModel {
       'avatar_url': avatarUrl,
       'created_at': createdAt?.toIso8601String(),
     };
+  }
+
+  // ADICIONADO: Método copyWith para facilitar atualizações de estado
+  UserModel copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? avatarUrl,
+    DateTime? createdAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }

@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chat_app/src/models/messageModel.dart';
 import 'package:chat_app/src/services/message_service.dart';
 import 'package:chat_app/src/services/realtime_service.dart';
-
+import 'package:chat_app/src/provaders/chat_list_provider.dart';
 class ChatProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
   final MessageService _messageService = MessageService();
@@ -169,8 +169,9 @@ class ChatProvider extends ChangeNotifier {
   void disposeSubscription() {
     _typingTimer?.cancel();
     if (_currentConversationId != null) {
-      _realtimeService.unsubscribeFromMessages(_currentConversationId!);
-      _realtimeService.unsubscribeFromPresence(_currentConversationId!);
+      // CORREÇÃO: Remover argumentos. Os métodos não os aceitam mais.
+      _realtimeService.unsubscribeFromMessages();
+      _realtimeService.unsubscribeFromPresence();
     }
   }
 

@@ -1,63 +1,11 @@
+-- (Seu código SQL existente) ...
 create table public.users (
-  id uuid references auth.users not null primary key, -- Chave estrangeira para o usuário autenticado
+  id uuid references auth.users not null primary key,
   name text,
   avatar_url text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
-
--- Habilita RLS (Row Level Security) - Segurança!
-alter table public.users enable row level security;
-
--- Política: Todo mundo pode ver os perfis (para listar contatos)
-create policy "Perfis são visíveis para todos" on public.users
-  for select using (true);
-
--- Política: Só o dono pode atualizar seu próprio perfil
-create policy "Usuários podem atualizar próprio perfil" on public.users
-  for update using (auth.uid() = id);
-
--- 2. Tabela de Conversas
-create table public.conversations (
-  id uuid default gen_random_uuid() primary key,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  name text, -- Opcional, para grupos
-  is_group boolean default false
-);
-
-alter table public.conversations enable row level security;
-
--- 3. Tabela de Participantes (quem está em qual conversa)
-create table public.participants (
-  conversation_id uuid references public.conversations not null,
-  user_id uuid references public.users not null,
-  joined_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  primary key (conversation_id, user_id)
-);
-
-alter table public.participants enable row level security;
-
--- 4. Tabela de Mensagens
-create table public.messages (
-  id uuid default gen_random_uuid() primary key,
-  conversation_id uuid references public.conversations not null,
-  sender_id uuid references public.users not null,
-  content text,      -- Texto da mensagem
-  file_url text,     -- URL se for imagem/arquivo
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
-alter table public.messages enable row level security;
-
--- Exemplo de política vital para mensagens (RLS):
--- "Um usuário só pode ver mensagens de conversas das quais ele é participante"
-create policy "Ver mensagens apenas se for participante" on public.messages
-  for select using (
-    exists (
-      select 1 from public.participants p
-      where p.conversation_id = messages.conversation_id
-      and p.user_id = auth.uid()
-    )
-  );
+-- ... (suas tabelas e políticas existentes) ...
 
 -- Função para encontrar ou criar uma conversa 1-para-1
 create or replace function public.find_or_create_conversation(other_user_id uuid)
@@ -95,5 +43,67 @@ begin
          (new_conversation_id, other_user_id);
 
   return new_conversation_id;
+end;
+$$;
+
+
+-- NOVA FUNÇÃO PARA BUSCAR A LISTA DE CONVERSAS (TASK 1)
+-- Esta função busca todas as conversas de um usuário e faz os joins
+-- necessários para obter os detalhes do "outro usuário" e a "última mensagem".
+create or replace function public.get_conversations_for_user(current_user_id_input uuid)
+returns setof json
+language plpgsql
+security definer
+as $$
+begin
+  return query
+  with ranked_messages as (
+    -- Subquery para encontrar a última mensagem de cada conversa
+    select
+      m.conversation_id,
+      m.text,
+      m.created_at,
+      m.author_id,
+      m.is_read,
+      row_number() over(partition by m.conversation_id order by m.created_at desc) as rn
+    from messages m
+    -- Otimização: só ranquear mensagens de conversas que o usuário participa
+    where m.conversation_id in (
+      select p.conversation_id from participants p where p.user_id = current_user_id_input
+    )
+  ),
+  last_messages as (
+    select *
+    from ranked_messages
+    where rn = 1
+  )
+  -- Query principal
+  select
+    json_build_object(
+      'conversation_id', c.id,
+      'other_user_id', u.id,
+      'other_user_name', u.name,
+      'other_user_avatar_url', u.avatar_url,
+      'last_message_text', lm.text,
+      'last_message_timestamp', lm.created_at,
+      'last_message_author_id', lm.author_id,
+      'is_last_message_read', lm.is_read
+    )
+  from conversations c
+  -- Join para encontrar o *outro* participante
+  join participants p_other on p_other.conversation_id = c.id
+    and p_other.user_id <> current_user_id_input
+  -- Join para pegar os dados do *outro* usuário
+  join users u on u.id = p_other.user_id
+  -- Join para pegar a *última mensagem*
+  left join last_messages lm on lm.conversation_id = c.id
+  -- Condição: Onde o usuário atual é participante E é uma conversa 1-para-1
+  where c.id in (
+    select p.conversation_id from participants p where p.user_id = current_user_id_input
+  )
+  and c.is_group = false
+  -- Ordenar pela última mensagem, da mais nova para a mais antiga
+  order by lm.created_at desc nulls last;
+
 end;
 $$;

@@ -14,6 +14,7 @@ import 'package:chat_app/src/screens/chat/chat_page.dart';
 import 'package:chat_app/src/provaders/auth_provider.dart';
 import 'package:chat_app/src/provaders/chat_provider.dart';
 import 'package:chat_app/src/provaders/new_chat_provider.dart';
+import 'package:chat_app/src/provaders/chat_list_provider.dart'; // IMPORTAR AQUI
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +45,9 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => NewChatProvider(),
         ),
+        ChangeNotifierProvider( // REGISTRAR AQUI
+          create: (_) => ChatListProvider(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -62,7 +66,7 @@ class MainApp extends StatelessWidget {
           RoutesEnum.newChat.route: (context) => const NewChatScreen(),
           RoutesEnum.chatPage.route: (context) => const ChatPage(),
         },
-        initialRoute: RoutesEnum.login.route,
+        initialRoute: RoutesEnum.login.route, 
       ),
     );
   }

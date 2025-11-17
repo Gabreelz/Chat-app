@@ -1,12 +1,13 @@
-// lida com mensagens e status em tempo real.
+
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RealtimeService {
   final SupabaseClient supabase = Supabase.instance.client;
-
-  late RealtimeChannel _messageChannel;
-  late RealtimeChannel _presenceChannel;
+  
+  // Guardar referências para poder cancelar a inscrição
+  RealtimeChannel? _messageChannel;
+  RealtimeChannel? _presenceChannel;
 
   // Listener para novas mensagens
   void listenToMessages(
@@ -14,22 +15,23 @@ class RealtimeService {
     Function(dynamic) onMessageReceived,
   ) {
     _messageChannel = supabase.channel('messages:$conversationId');
-
-    _messageChannel
+    
+    _messageChannel!
         .onPostgresChanges(
-      event: PostgresChangeEvent.all,
-      schema: 'public',
-      table: 'messages',
-      filter: PostgresChangeFilter(
-        type: PostgresChangeFilterType.eq,
-        column: 'conversation_id',
-        value: conversationId,
-      ),
-      callback: (payload, [ref]) { // CORRIGIDO: callback é um parâmetro nomeado
-        onMessageReceived(payload);
-      },
-    )
-        .subscribe(); // CORRIGIDO: subscribe() é chamado no final
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'conversation_id',
+            value: conversationId,
+          ),
+          // CORREÇÃO (V2): O callback agora é um parâmetro nomeado dentro de onPostgresChanges
+          callback: (payload, [ref]) {
+            onMessageReceived(payload);
+          },
+        )
+        .subscribe(); // CORREÇÃO (V2): subscribe() é chamado no final, sem callback
   }
 
   // Listener para status de digitação
@@ -39,49 +41,54 @@ class RealtimeService {
   ) {
     _presenceChannel = supabase.channel('typing:$conversationId');
 
-    _presenceChannel.onPresenceSync((_) {
-      // Sync de presença
-    }).onPresenceJoin((payload) {
-      // CORRIGIDO: Iterar sobre newPresences (o payload não é mais um Map)
-      for (final presence in payload.newPresences) {
-        final userId = presence.payload['user_id'] as String?;
-        if (userId != null) {
-          onTypingStatusChanged(userId, true);
+    _presenceChannel!
+      .onPresenceSync((_) {
+        // Sync de presença
+      })
+      .onPresenceJoin((payload) {
+        // CORREÇÃO (V2): O payload agora é um objeto e os dados estão em .newPresences
+        for (final presence in payload.newPresences) {
+          final userId = presence.payload['user_id'] as String?;
+          if (userId != null) {
+            onTypingStatusChanged(userId, true);
+          }
         }
-      }
-    }).onPresenceLeave((payload) {
-      // CORRIGIDO: Iterar sobre leftPresences (o payload não é mais um Map)
-      for (final presence in payload.leftPresences) {
-        final userId = presence.payload['user_id'] as String?;
-        if (userId != null) {
-          onTypingStatusChanged(userId, false);
+      })
+      .onPresenceLeave((payload) {
+        // CORREÇÃO (V2): O payload agora é um objeto e os dados estão em .leftPresences
+        for (final presence in payload.leftPresences) {
+          final userId = presence.payload['user_id'] as String?;
+          if (userId != null) {
+            onTypingStatusChanged(userId, false);
+          }
         }
-      }
-    }).subscribe((status, [ref]) async {
-      // CORRIGIDO: O enum foi renomeado para RealtimeSubscribeStatus
-      if (status == RealtimeSubscribeStatus.subscribed) {
-        final userId = supabase.auth.currentUser?.id ?? '';
-        await _presenceChannel.track({
-          'user_id': userId,
-          'online_at': DateTime.now().toIso8601String(),
-        });
-      }
-    });
+      })
+      .subscribe((status, [ref]) async {
+        // CORREÇÃO (V2): O enum foi renomeado para RealtimeSubscribeStatus
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          final userId = supabase.auth.currentUser?.id ?? '';
+          await _presenceChannel!.track({
+            'user_id': userId,
+            'online_at': DateTime.now().toIso8601String(),
+          });
+        }
+      });
   }
 
   // Enviar status de digitação
   Future<void> sendTypingStatus(String conversationId, bool isTyping) async {
     try {
       final userId = supabase.auth.currentUser?.id ?? '';
-
+      
       if (isTyping) {
-        await supabase.channel('typing:$conversationId').track({
+        // Usar o _presenceChannel já instanciado
+        await _presenceChannel?.track({
           'user_id': userId,
           'is_typing': true,
           'typed_at': DateTime.now().toIso8601String(),
         });
       } else {
-        await supabase.channel('typing:$conversationId').untrack();
+        await _presenceChannel?.untrack();
       }
     } catch (e) {
       print('Erro ao enviar status de digitação: $e');
@@ -113,11 +120,12 @@ class RealtimeService {
         .stream(primaryKey: ['id'])
         .eq('id', userId)
         .listen((List<Map<String, dynamic>> data) {
-      if (data.isNotEmpty) {
-        final isOnline = data.first['is_online'] as bool? ?? false;
-        onStatusChanged(isOnline);
-      }
-    });
+          if (data.isNotEmpty) {
+            // Adicionar verificação de nulo, por segurança
+            final isOnline = data.first['is_online'] as bool? ?? false;
+            onStatusChanged(isOnline);
+          }
+        });
   }
 
   // Obter último status online do usuário
@@ -138,18 +146,24 @@ class RealtimeService {
   }
 
   // Desinscrever do channel de mensagens
-  Future<void> unsubscribeFromMessages(String conversationId) async {
+  Future<void> unsubscribeFromMessages() async {
     try {
-      await _messageChannel.unsubscribe();
+      if (_messageChannel != null) {
+        await _messageChannel!.unsubscribe();
+        _messageChannel = null;
+      }
     } catch (e) {
       print('Erro ao desinscrever de mensagens: $e');
     }
   }
 
   // Desinscrever do channel de presença
-  Future<void> unsubscribeFromPresence(String conversationId) async {
+  Future<void> unsubscribeFromPresence() async {
     try {
-      await _presenceChannel.unsubscribe();
+      if (_presenceChannel != null) {
+        await _presenceChannel!.unsubscribe();
+        _presenceChannel = null;
+      }
     } catch (e) {
       print('Erro ao desinscrever de presença: $e');
     }
@@ -157,11 +171,7 @@ class RealtimeService {
 
   // Desinscrever de tudo
   Future<void> disposeAll() async {
-    try {
-      await _messageChannel.unsubscribe();
-      await _presenceChannel.unsubscribe();
-    } catch (e) {
-      print('Erro ao desinscrever: $e');
-    }
+    await unsubscribeFromMessages();
+    await unsubscribeFromPresence();
   }
 }
