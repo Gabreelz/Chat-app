@@ -1,4 +1,3 @@
-// ...existing code...
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chat_app/src/models/messageModel.dart';
 
@@ -58,10 +57,12 @@ class MessageService {
           .from('messages')
           .select()
           .eq('conversation_id', conversationId)
-          .isFilter('deleted_at', null) // CORRIGIDO: de .is_ para .isFilter
-          .order('created_at', ascending: true) as List<dynamic>;
+          // CORREÇÃO (V2): A sintaxe .is_() está obsoleta. Use .isFilter()
+          .isFilter('deleted_at', null)
+          .order('created_at', ascending: true);
 
-      final list = response.cast<Map<String, dynamic>>();
+      // A resposta já é uma List<dynamic> que pode ser castada
+      final list = (response as List).cast<Map<String, dynamic>>();
       return list.map((m) => MessageModel.fromJson(m)).toList();
     } catch (e) {
       print('Erro ao carregar mensagens: $e');
@@ -132,13 +133,14 @@ class MessageService {
 
   // Marcar todas as mensagens de uma conversa como lidas (exceto as do próprio usuário)
   Future<bool> markAllAsRead(String conversationId, String userId) async {
-    try {
+      try {
       await supabase
           .from('messages')
           .update({'is_read': true})
           .eq('conversation_id', conversationId)
           .neq('author_id', userId)
-          .isFilter('deleted_at', null); // CORRIGIDO: de .is_ para .isFilter
+          // CORREÇÃO (V2): A sintaxe .is_() está obsoleta. Use .isFilter()
+          .isFilter('deleted_at', null);
       return true;
     } catch (e) {
       print('Erro ao marcar todas como lidas: $e');
@@ -146,4 +148,3 @@ class MessageService {
     }
   }
 }
-// ...existing code...
