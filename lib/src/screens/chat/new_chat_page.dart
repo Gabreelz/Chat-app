@@ -88,18 +88,35 @@ class _NewChatScreenState extends State<NewChatScreen> {
       appBar: AppBar(
         title: const Text('Novo Chat'),
         elevation: 0,
+
+        // --- BOTÃO DE VOLTAR COM PNG ---
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: Image.asset(
+            'assets/icons/back-button.png', // coloque seu PNG aqui
+            width: 24,
+            height: 24,
+          ),
+          tooltip: 'Voltar',
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => newChatProvider.loadAllUsers(),
-            tooltip: 'Recarregar usuários',
-          )
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: IconButton(
+              onPressed: () => newChatProvider.loadAllUsers(),
+              icon: Image.asset(
+                'assets/icons/recarregando.png',
+                width: 28,
+                height: 28,
+              ),
+              tooltip: 'Recarregar usuários',
+            ),
+          ),
         ],
       ),
       body: Consumer<NewChatProvider>(
         builder: (context, provider, _) {
           // ✅ CORREÇÃO: A estrutura principal (Column) é retornada SEMPRE.
-          // O loading ou lista vazia são tratados APENAS na área da lista.
           return Column(
             children: [
               // 1. Barra de Pesquisa (Sempre visível)
@@ -110,17 +127,18 @@ class _NewChatScreenState extends State<NewChatScreen> {
                   onChanged: (value) => provider.searchUsers(value),
                   decoration: InputDecoration(
                     hintText: 'Pesquisar usuários',
-                    prefixIcon: const Icon(Icons.search),
-                    // Botão de limpar busca
-                    suffixIcon: searchCtrl.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              searchCtrl.clear();
-                              provider.clearSearch();
-                            },
-                          )
-                        : null,
+
+                    // --- ÍCONE DE BUSCA COM PNG ---
+                    prefixIcon: Padding(
+                      padding: const EdgeInsets.all(10),
+                      child: Image.asset(
+                        'assets/icons/lupa.png', // seu PNG aqui
+                        width: 20,
+                        height: 20,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -141,22 +159,33 @@ class _NewChatScreenState extends State<NewChatScreen> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    // Estado de Lista Vazia (Geral)
                     if (provider.allUsers.isEmpty) {
                       return Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.person_off,
-                                size: 48, color: Colors.grey),
+                            // Substituindo o ícone por PNG
+                            Image.asset(
+                              'assets/icons/logoP.png',
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.contain,
+                            ),
+
                             const SizedBox(height: 16),
-                            const Text('Nenhum usuário encontrado.'),
+
+                            const Text(
+                              'Nenhum usuário encontrado.',
+                              style: TextStyle(fontSize: 16),
+                            ),
+
                             const SizedBox(height: 8),
-                            // ✅ Botão extra para tentar recarregar no meio da tela
-                            TextButton.icon(
-                                onPressed: () => provider.loadAllUsers(),
-                                icon: const Icon(Icons.refresh),
-                                label: const Text("Tentar novamente"))
+
+                            // Botão tentar novamente (sem ícone, como pediu)
+                            TextButton(
+                              onPressed: () => provider.loadAllUsers(),
+                              child: const Text("Tentar novamente"),
+                            ),
                           ],
                         ),
                       );
