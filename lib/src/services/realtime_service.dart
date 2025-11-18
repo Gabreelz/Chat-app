@@ -1,5 +1,3 @@
-
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RealtimeService {
@@ -26,8 +24,8 @@ class RealtimeService {
             column: 'conversation_id',
             value: conversationId,
           ),
-          // CORREÇÃO (V2): O callback agora é um parâmetro nomeado dentro de onPostgresChanges
-          callback: (payload, [ref]) {
+          // CORREÇÃO (V2): O callback agora é um parâmetro nomeado
+          callback: (payload) {
             onMessageReceived(payload);
           },
         )

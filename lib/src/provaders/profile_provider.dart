@@ -1,3 +1,5 @@
+// lib/src/provaders/profile_provider.dart
+
 import 'dart:io';
 import 'package:chat_app/src/models/UserModel.dart';
 import 'package:chat_app/src/services/profile_service.dart';
@@ -72,6 +74,8 @@ class ProfileProvider extends ChangeNotifier {
 
       // 1. Se uma nova imagem foi escolhida, faça o upload
       if (_pickedImage != null) {
+        // AQUI ESTÁ A CORREÇÃO:
+        // O método chama-se "uploadAvatar", não "uploadFile"
         avatarUrl = await _storageService.uploadAvatar(_pickedImage!, _user!.id);
       }
 

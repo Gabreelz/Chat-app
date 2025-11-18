@@ -11,10 +11,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:chat_app/src/screens/login/login_page.dart';
 import 'package:chat_app/src/screens/chat/chat_page.dart';
+// 1. IMPORTAMOS A TELA E O PROVIDER QUE FALTAVAM
+import 'package:chat_app/src/screens/profile/profile_page.dart';
 import 'package:chat_app/src/provaders/auth_provider.dart';
 import 'package:chat_app/src/provaders/chat_provider.dart';
 import 'package:chat_app/src/provaders/new_chat_provider.dart';
-import 'package:chat_app/src/provaders/chat_list_provider.dart'; // IMPORTAR AQUI
+import 'package:chat_app/src/provaders/chat_list_provider.dart';
+import 'package:chat_app/src/provaders/profile_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,25 +32,18 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  /// Construtor da classe [MainApp]
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ChatProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => NewChatProvider(),
-        ),
-        ChangeNotifierProvider( // REGISTRAR AQUI
-          create: (_) => ChatListProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => NewChatProvider()),
+        ChangeNotifierProvider(create: (_) => ChatListProvider()),
+        // 2. REGISTRAMOS O PROVIDER DO PERFIL AQUI
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -61,10 +57,11 @@ class MainApp extends StatelessWidget {
           RoutesEnum.login.route: (context) => LoginScreen(),
           RoutesEnum.register.route: (context) => const RegisterScreen(),
           RoutesEnum.home.route: (context) => const HomeScreen(),
-
           RoutesEnum.chatList.route: (context) => const ChatListPage(),
           RoutesEnum.newChat.route: (context) => const NewChatScreen(),
           RoutesEnum.chatPage.route: (context) => const ChatPage(),
+          // 3. REGISTRAMOS A ROTA DO PERFIL AQUI
+          RoutesEnum.profile.route: (context) => const ProfilePage(),
         },
         initialRoute: RoutesEnum.login.route, 
       ),
