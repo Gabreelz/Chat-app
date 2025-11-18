@@ -57,8 +57,7 @@ class MessageService {
           .from('messages')
           .select()
           .eq('conversation_id', conversationId)
-          // CORREÇÃO (V2): A sintaxe .is_() está obsoleta. Use .isFilter()
-          .isFilter('deleted_at', null)
+          .isFilter('deleted_at', null) // CORRIGIDO (era .is_())
           .order('created_at', ascending: true);
 
       // A resposta já é uma List<dynamic> que pode ser castada
@@ -139,8 +138,7 @@ class MessageService {
           .update({'is_read': true})
           .eq('conversation_id', conversationId)
           .neq('author_id', userId)
-          // CORREÇÃO (V2): A sintaxe .is_() está obsoleta. Use .isFilter()
-          .isFilter('deleted_at', null);
+          .isFilter('deleted_at', null); // CORRIGIDO (era .is_())
       return true;
     } catch (e) {
       print('Erro ao marcar todas como lidas: $e');

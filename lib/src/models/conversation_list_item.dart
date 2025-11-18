@@ -21,9 +21,9 @@ class ConversationListItemModel {
 
   factory ConversationListItemModel.fromMap(Map<String, dynamic> json) {
     return ConversationListItemModel(
-      conversationId: json['conversation_id'],
-      otherUserId: json['other_user_id'],
-      otherUserName: json['other_user_name'],
+      conversationId: json['conversation_id'] as String? ?? '', // CORRIGIDO
+      otherUserId: json['other_user_id'] as String? ?? '', // CORRIGIDO
+      otherUserName: json['other_user_name'] as String? ?? 'Usuário', // CORRIGIDO
       otherUserAvatarUrl: json['other_user_avatar_url'],
       lastMessageText: json['last_message_text'],
       lastMessageTimestamp: json['last_message_timestamp'] != null

@@ -1,3 +1,5 @@
+// lib/src/models/messageModel.dart
+
 class MessageModel {
   final String id;
   final String conversationId;
@@ -23,12 +25,14 @@ class MessageModel {
 
   factory MessageModel.fromMap(Map<String, dynamic> m) {
     return MessageModel(
-      id: m['id'],
-      conversationId: m['conversation_id'],
-      authorId: m['author_id'],
+      id: m['id'] as String? ?? '', // CORRIGIDO
+      conversationId: m['conversation_id'] as String? ?? '', // CORRIGIDO
+      authorId: m['author_id'] as String? ?? '', // CORRIGIDO
       text: m['text'],
       fileUrl: m['file_url'],
-      createdAt: DateTime.parse(m['created_at']),
+      createdAt: m['created_at'] != null
+          ? DateTime.parse(m['created_at'])
+          : DateTime.now(), // CORRIGIDO
       isRead: m['is_read'] as bool? ?? false,
       editedAt: m['edited_at'] != null ? DateTime.parse(m['edited_at']) : null,
       deletedAt: m['deleted_at'] != null ? DateTime.parse(m['deleted_at']) : null,
@@ -71,7 +75,7 @@ class MessageModel {
   bool get wasEdited => editedAt != null;
 
   // Método para verificar se foi apagada
-  bool get wasDeleted => deletedAt != null;
+  bool get wasDeleted => deletedAt == null;
 
   // CopyWith para criar uma cópia com campos alterados
   MessageModel copyWith({

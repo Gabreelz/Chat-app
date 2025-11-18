@@ -1,5 +1,3 @@
-
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -10,29 +8,18 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    
+
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': fullName},
+      data: {'full_name': fullName}, // O SQL trigger vai usar isto
     );
 
-    if (response.user == null) {
-      return false;
-    }
+    // O insert manual foi REMOVIDO daqui.
+    // O SQL trigger 'handle_new_user' que você criou no "Passo 1"
+    // vai fazer a inserção na tabela 'public.users' automaticamente.
 
-    try {
-      await _client.from('users').insert({
-        'id': response.user!.id,
-        'name': fullName,
-        'email': email, 
-      });
-      return true;
-
-    } catch (e) {
-      print('Erro ao inserir perfil em public.users: $e');
-      return false;
-    }
+    return response.user != null;
   }
 
   Future<bool> signIn({

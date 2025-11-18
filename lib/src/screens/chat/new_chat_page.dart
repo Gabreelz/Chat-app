@@ -82,26 +82,28 @@ class _NewChatScreenState extends State<NewChatScreen> {
     }
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Novo Chat'),
         elevation: 0,
+        // ✅ ADICIONADO: Botão de Refresh na AppBar
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => newChatProvider.loadAllUsers(),
+            tooltip: 'Recarregar usuários',
+          )
+        ],
       ),
       body: Consumer<NewChatProvider>(
         builder: (context, provider, _) {
-          if (provider.isLoading && provider.filteredUsers.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.allUsers.isEmpty && !provider.isLoading) {
-            return const Center(child: Text('Nenhum usuário disponível'));
-          }
-
+          // ✅ CORREÇÃO: A estrutura principal (Column) é retornada SEMPRE.
+          // O loading ou lista vazia são tratados APENAS na área da lista.
           return Column(
             children: [
-              // Barra de pesquisa
+              // 1. Barra de Pesquisa (Sempre visível)
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: TextField(
@@ -110,6 +112,7 @@ class _NewChatScreenState extends State<NewChatScreen> {
                   decoration: InputDecoration(
                     hintText: 'Pesquisar usuários',
                     prefixIcon: const Icon(Icons.search),
+                    // Botão de limpar busca
                     suffixIcon: searchCtrl.text.isNotEmpty
                         ? IconButton(
                             icon: const Icon(Icons.clear),
@@ -127,38 +130,65 @@ class _NewChatScreenState extends State<NewChatScreen> {
                       vertical: 8,
                     ),
                   ),
-                  onTap: () {
-                    searchCtrl.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: searchCtrl.text.length,
+                ),
+              ),
+
+              // 2. Conteúdo da Lista (Variável)
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    // Estado de Loading
+                    if (provider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    // Estado de Lista Vazia (Geral)
+                    if (provider.allUsers.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.person_off, size: 48, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            const Text('Nenhum usuário encontrado.'),
+                            const SizedBox(height: 8),
+                            // ✅ Botão extra para tentar recarregar no meio da tela
+                            TextButton.icon(
+                                onPressed: () => provider.loadAllUsers(),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text("Tentar novamente")
+                            )
+                          ],
+                        ),
+                      );
+                    }
+
+                    // Estado de Busca sem resultados
+                    if (provider.filteredUsers.isEmpty && provider.searchQuery.isNotEmpty) {
+                      return Center(
+                        child: Text('Nenhum usuário encontrado para "${provider.searchQuery}"'),
+                      );
+                    }
+
+                    // Lista de Usuários
+                    return ListView.builder(
+                      itemCount: provider.filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = provider.filteredUsers[index];
+                        return ListTile(
+                          leading: CustomAvatar(
+                            imageUrl: user.avatarUrl,
+                            name: user.name,
+                            radius: 24,
+                          ),
+                          title: Text(user.name),
+                          subtitle: Text(user.email),
+                          onTap: () => _startNewChat(user),
+                        );
+                      },
                     );
                   },
                 ),
-              ),
-              // Lista de usuários
-              Expanded(
-                child: provider.filteredUsers.isEmpty &&
-                        provider.searchQuery.isNotEmpty
-                    ? Center(
-                        child: Text(
-                            'Nenhum usuário encontrado para "${provider.searchQuery}"'),
-                      )
-                    : ListView.builder(
-                        itemCount: provider.filteredUsers.length,
-                        itemBuilder: (context, index) {
-                          final user = provider.filteredUsers[index];
-                          return ListTile(
-                            leading: CustomAvatar(
-                              imageUrl: user.avatarUrl,
-                              name: user.name,
-                              radius: 24,
-                            ),
-                            title: Text(user.name),
-                            subtitle: Text(user.email),
-                            onTap: () => _startNewChat(user),
-                          );
-                        },
-                      ),
               ),
             ],
           );
