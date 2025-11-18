@@ -1,7 +1,6 @@
 import 'package:chat_app/src/models/registerViewModel.dart';
 import 'package:chat_app/src/widgets/custom_button.dart';
 import 'package:chat_app/src/widgets/custom_input.dart';
-import 'package:chat_app/src/widgets/custom_text_button.dart';
 import 'package:flutter/material.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -16,14 +15,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void initState() {
-    viewModel.initToast(context);
     super.initState();
+    viewModel.initToast(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5FF),
       body: SingleChildScrollView(
         child: Center(
           child: LayoutBuilder(
@@ -32,8 +30,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: SizedBox(
-                    width:
-                        constraints.maxWidth > 768 ? 768 : constraints.maxWidth,
                     child: FormWidget(viewModel: viewModel),
                   ),
                 ),
@@ -58,19 +54,25 @@ class _FormWidgetState extends State<FormWidget> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  // Hover Animation
+  bool _hoverLogin = false;
+
   @override
   Widget build(BuildContext context) {
+    final vm = widget.viewModel;
+
     return Form(
-      key: widget.viewModel.formKey,
+      key: vm.formKey,
       child: Column(
         spacing: 4,
         children: [
-          // Logo
           const Image(
             image: AssetImage('assets/icons/logoP.png'),
             height: 220,
           ),
+
           const SizedBox(height: 8),
+
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -78,43 +80,41 @@ class _FormWidgetState extends State<FormWidget> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2E2E2E),
               ),
             ),
           ),
+
           const SizedBox(height: 12),
 
-          // Email
+          // EMAIL
           CustomInput(
             hint: 'Digite seu email',
             label: 'Email',
-            controller: widget.viewModel.emailController,
+            controller: vm.emailController,
             keyboardType: TextInputType.emailAddress,
-            validator: (value) => widget.viewModel.emailValidator(value),
+            validator: vm.emailValidator,
           ),
           const SizedBox(height: 18),
 
-          // Nome
+          // NOME
           CustomInput(
             hint: 'Digite seu nome completo',
             label: 'Nome',
-            controller: widget.viewModel.fullNameController,
-            validator: (value) => widget.viewModel.fullNameValidator(value),
+            controller: vm.fullNameController,
+            validator: vm.fullNameValidator,
           ),
           const SizedBox(height: 18),
 
+          // SENHA
           CustomInput(
             hint: 'Digite sua senha',
             label: 'Senha',
-            controller: widget.viewModel.passwordController,
+            controller: vm.passwordController,
             obscureText: _obscurePassword,
-            validator: (value) => widget.viewModel.passwordValidator(value),
+            validator: vm.passwordValidator,
             suffixIcon: IconButton(
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
-              },
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
               icon: Image.asset(
                 _obscurePassword
                     ? 'assets/icons/olhoR.png'
@@ -129,16 +129,12 @@ class _FormWidgetState extends State<FormWidget> {
           CustomInput(
             hint: 'Confirme sua senha',
             label: 'Confirmação da senha',
-            controller: widget.viewModel.passwordConfirmationController,
+            controller: vm.passwordConfirmationController,
             obscureText: _obscureConfirmPassword,
-            validator: (value) =>
-                widget.viewModel.passwordConfirmationValidator(value),
+            validator: vm.passwordConfirmationValidator,
             suffixIcon: IconButton(
-              onPressed: () {
-                setState(() {
-                  _obscureConfirmPassword = !_obscureConfirmPassword;
-                });
-              },
+              onPressed: () => setState(
+                  () => _obscureConfirmPassword = !_obscureConfirmPassword),
               icon: Image.asset(
                 _obscureConfirmPassword
                     ? 'assets/icons/olhoR.png'
@@ -148,26 +144,54 @@ class _FormWidgetState extends State<FormWidget> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
 
-          // Botão Registrar
+          const SizedBox(height: 28),
+
+          // BOTÃO REGISTRAR
           CustomButton(
-            icon: widget.viewModel.isLoading ? Icons.hourglass_empty : null,
-            buttonText:
-                widget.viewModel.isLoading ? 'Registrando...' : 'Registrar',
+            icon: vm.isLoading ? Icons.hourglass_empty : null,
+            buttonText: vm.isLoading ? 'Registrando...' : 'Registrar',
             backgroundColor: const Color(0xFF03A9F4),
-            buttonAction: widget.viewModel.isLoading
-                ? null
-                : () async => widget.viewModel.registerButtonAction(context),
+            buttonAction:
+                vm.isLoading ? null : () => vm.registerButtonAction(context),
           ),
-          const SizedBox(height: 12),
 
-          // Botão para login
-          CustomTextButton(
-            icon: Icons.login,
-            buttonText: 'Já tem uma conta? Faça login',
-            buttonAction: () => widget.viewModel.navigateToLogin(
-              Navigator.of(context),
+          const SizedBox(height: 16),
+
+          // -----------------------------------------
+          // LINK ANIMADO "Já tem uma conta? Faça login"
+          // -----------------------------------------
+          MouseRegion(
+            onEnter: (_) => setState(() => _hoverLogin = true),
+            onExit: (_) => setState(() => _hoverLogin = false),
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => vm.navigateToLogin(Navigator.of(context)),
+              child: Column(
+                children: [
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    style: TextStyle(
+                      fontSize: _hoverLogin ? 15 : 14,
+                      color: _hoverLogin
+                          ? const Color(0xFF0D47A1)
+                          : const Color(0xFF1565C0),
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.none,
+                    ),
+                    child: const Text('Já tem uma conta? Faça login'),
+                  ),
+                  const SizedBox(height: 2),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    height: 2,
+                    width: _hoverLogin ? 140 : 0,
+                    color: const Color(0xFF0D47A1),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

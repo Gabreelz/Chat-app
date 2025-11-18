@@ -18,6 +18,9 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  // Controle do hover da animação
+  bool _hoverRegister = false;
+
   Future<void> _signIn(BuildContext context) async {
     final supabase = Supabase.instance.client;
     setState(() => _isLoading = true);
@@ -57,7 +60,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo do app
                 Image.asset('assets/icons/logoP.png', height: 180),
 
                 const SizedBox(height: 24),
@@ -75,7 +77,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Campo de email
                 CustomInput(
                   hint: 'Digite seu email',
                   label: 'Email',
@@ -84,7 +85,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 18),
 
-                // Campo de senha com "olhinho"
                 CustomInput(
                   hint: 'Digite sua senha',
                   label: 'Senha',
@@ -109,7 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // Botão de login
                 CustomButton(
                   buttonText: _isLoading ? 'Entrando...' : 'Entrar',
                   backgroundColor: const Color(0xFF03A9F4),
@@ -118,20 +117,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Link para cadastro
-                GestureDetector(
-                  onTap: () =>
-                      Navigator.pushNamed(context, RoutesEnum.register.route),
-                  child: const Text(
-                    'Não tem uma conta? Cadastre-se',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1565C0),
-                      fontWeight: FontWeight.w500,
-                      decoration: TextDecoration.none,
+                // --------------------------
+                // LINK COM ANIMAÇÃO
+                // --------------------------
+                MouseRegion(
+                  onEnter: (_) => setState(() => _hoverRegister = true),
+                  onExit: (_) => setState(() => _hoverRegister = false),
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () =>
+                        Navigator.pushNamed(context, RoutesEnum.register.route),
+                    child: Column(
+                      children: [
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          style: TextStyle(
+                            fontSize: _hoverRegister ? 15 : 14,
+                            color: _hoverRegister
+                                ? const Color(0xFF0D47A1)
+                                : const Color(0xFF1565C0),
+                            fontWeight: FontWeight.w600,
+                            decoration: TextDecoration.none,
+                          ),
+                          child: const Text(
+                            'Não tem uma conta? Cadastre-se',
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          curve: Curves.easeOut,
+                          height: 2,
+                          width: _hoverRegister ? 170 : 0,
+                          color: const Color(0xFF0D47A1),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+                // --------------------------
               ],
             ),
           ),
