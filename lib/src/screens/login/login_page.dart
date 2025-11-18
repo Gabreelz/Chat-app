@@ -42,17 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: Colors.redAccent,
-      ),
+      SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5FF), // Fundo suave lilás
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -62,10 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo do app
-                Image.asset(
-                  'assets/icons/logoP.png',
-                  height: 180,
-                ),
+                Image.asset('assets/icons/logoP.png', height: 180),
 
                 const SizedBox(height: 24),
 
@@ -116,22 +109,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Esqueci minha senha',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF1565C0),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
                 // Botão de login
                 CustomButton(
                   buttonText: _isLoading ? 'Entrando...' : 'Entrar',
@@ -143,10 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Link para cadastro
                 GestureDetector(
-                  onTap: () => Navigator.pushNamed(
-                    context,
-                    RoutesEnum.register.route,
-                  ),
+                  onTap: () =>
+                      Navigator.pushNamed(context, RoutesEnum.register.route),
                   child: const Text(
                     'Não tem uma conta? Cadastre-se',
                     style: TextStyle(

@@ -11,13 +11,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:chat_app/src/screens/login/login_page.dart';
 import 'package:chat_app/src/screens/chat/chat_page.dart';
-// 1. IMPORTAMOS A TELA E O PROVIDER QUE FALTAVAM
-import 'package:chat_app/src/screens/profile/profile_page.dart';
 import 'package:chat_app/src/provaders/auth_provider.dart';
 import 'package:chat_app/src/provaders/chat_provider.dart';
 import 'package:chat_app/src/provaders/new_chat_provider.dart';
 import 'package:chat_app/src/provaders/chat_list_provider.dart';
-import 'package:chat_app/src/provaders/profile_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,16 +39,15 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (_) => NewChatProvider()),
         ChangeNotifierProvider(create: (_) => ChatListProvider()),
-        // 2. REGISTRAMOS O PROVIDER DO PERFIL AQUI
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         builder: FToastBuilder(),
-        
+
+        // ⭐ Aqui está o dark mode automático
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system, 
+        themeMode: ThemeMode.system, // Segue o modo do sistema/navegador
 
         routes: {
           RoutesEnum.login.route: (context) => LoginScreen(),
@@ -60,10 +56,9 @@ class MainApp extends StatelessWidget {
           RoutesEnum.chatList.route: (context) => const ChatListPage(),
           RoutesEnum.newChat.route: (context) => const NewChatScreen(),
           RoutesEnum.chatPage.route: (context) => const ChatPage(),
-          // 3. REGISTRAMOS A ROTA DO PERFIL AQUI
-          RoutesEnum.profile.route: (context) => const ProfilePage(),
         },
-        initialRoute: RoutesEnum.login.route, 
+
+        initialRoute: RoutesEnum.login.route,
       ),
     );
   }

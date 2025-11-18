@@ -82,13 +82,12 @@ class _NewChatScreenState extends State<NewChatScreen> {
     }
   }
 
- @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Novo Chat'),
         elevation: 0,
-        // ✅ ADICIONADO: Botão de Refresh na AppBar
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -148,7 +147,8 @@ class _NewChatScreenState extends State<NewChatScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.person_off, size: 48, color: Colors.grey),
+                            const Icon(Icons.person_off,
+                                size: 48, color: Colors.grey),
                             const SizedBox(height: 16),
                             const Text('Nenhum usuário encontrado.'),
                             const SizedBox(height: 8),
@@ -156,17 +156,18 @@ class _NewChatScreenState extends State<NewChatScreen> {
                             TextButton.icon(
                                 onPressed: () => provider.loadAllUsers(),
                                 icon: const Icon(Icons.refresh),
-                                label: const Text("Tentar novamente")
-                            )
+                                label: const Text("Tentar novamente"))
                           ],
                         ),
                       );
                     }
 
                     // Estado de Busca sem resultados
-                    if (provider.filteredUsers.isEmpty && provider.searchQuery.isNotEmpty) {
+                    if (provider.filteredUsers.isEmpty &&
+                        provider.searchQuery.isNotEmpty) {
                       return Center(
-                        child: Text('Nenhum usuário encontrado para "${provider.searchQuery}"'),
+                        child: Text(
+                            'Nenhum usuário encontrado para "${provider.searchQuery}"'),
                       );
                     }
 

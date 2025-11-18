@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
 
@@ -33,7 +32,7 @@ class _ChatListPageState extends State<ChatListPage> {
     } else if (difference.inDays == 1) {
       return 'Ontem';
     } else {
-      return DateFormat('dd/MM/yy').format(time); 
+      return DateFormat('dd/MM/yy').format(time);
     }
   }
 
@@ -44,36 +43,36 @@ class _ChatListPageState extends State<ChatListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Conversas'),
+        title: const Text('Partness Chat'),
         leading: IconButton(
-          icon: const Icon(Icons.logout),
           onPressed: () async {
             await Supabase.instance.client.auth.signOut();
             if (mounted) {
               Navigator.pushReplacementNamed(context, RoutesEnum.login.route);
             }
           },
+          icon: Image.asset(
+            'assets/icons/saida.png', // ajuste o caminho do seu PNG
+            width: 24,
+            height: 24,
+          ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline), 
-            onPressed: () {
-              Navigator.pushNamed(context, RoutesEnum.profile.route);
-            },
-          )
-        ],
       ),
       body: _buildBody(context, provider, theme),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await Navigator.pushNamed(context, RoutesEnum.newChat.route);
           if (mounted) {
-            Provider.of<ChatListProvider>(context, listen: false).loadConversations();
+            Provider.of<ChatListProvider>(context, listen: false)
+                .loadConversations();
           }
         },
-        backgroundColor: theme.primaryColor,
         tooltip: 'Nova Conversa',
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Image.asset(
+          'assets/icons/logoP.png',
+          width: 28,
+          height: 28,
+        ),
       ),
     );
   }
@@ -87,9 +86,12 @@ class _ChatListPageState extends State<ChatListPage> {
     if (provider.errorMessage != null) {
       return Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Erro ao carregar: ${provider.errorMessage}', textAlign: TextAlign.center,),
-          ));
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          'Erro ao carregar: ${provider.errorMessage}',
+          textAlign: TextAlign.center,
+        ),
+      ));
     }
 
     if (provider.conversations.isEmpty) {
@@ -130,8 +132,8 @@ class _ChatListPageState extends State<ChatListPage> {
             lastMessageText,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7)),
+            style:
+                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
           ),
           trailing: Text(
             _formatTimestamp(time),
@@ -143,7 +145,7 @@ class _ChatListPageState extends State<ChatListPage> {
           onTap: () async {
             await Navigator.pushNamed(
               context,
-              RoutesEnum.chatPage.route, 
+              RoutesEnum.chatPage.route,
               arguments: {
                 'conversationId': conversation.conversationId,
                 'otherUserId': conversation.otherUserId,
@@ -151,8 +153,9 @@ class _ChatListPageState extends State<ChatListPage> {
                 'otherUserAvatarUrl': conversation.otherUserAvatarUrl,
               },
             );
-             if (mounted) {
-              Provider.of<ChatListProvider>(context, listen: false).loadConversations();
+            if (mounted) {
+              Provider.of<ChatListProvider>(context, listen: false)
+                  .loadConversations();
             }
           },
         );
