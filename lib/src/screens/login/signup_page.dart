@@ -23,7 +23,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F5FF),
       body: SingleChildScrollView(
         child: Center(
           child: LayoutBuilder(
@@ -78,7 +77,6 @@ class _FormWidgetState extends State<FormWidget> {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF2E2E2E),
               ),
             ),
           ),

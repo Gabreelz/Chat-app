@@ -14,7 +14,7 @@ import 'package:chat_app/src/screens/chat/chat_page.dart';
 import 'package:chat_app/src/provaders/auth_provider.dart';
 import 'package:chat_app/src/provaders/chat_provider.dart';
 import 'package:chat_app/src/provaders/new_chat_provider.dart';
-import 'package:chat_app/src/provaders/chat_list_provider.dart'; // IMPORTAR AQUI
+import 'package:chat_app/src/provaders/chat_list_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,44 +29,36 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  /// Construtor da classe [MainApp]
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => ChatProvider(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => NewChatProvider(),
-        ),
-        ChangeNotifierProvider( // REGISTRAR AQUI
-          create: (_) => ChatListProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => NewChatProvider()),
+        ChangeNotifierProvider(create: (_) => ChatListProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         builder: FToastBuilder(),
-        
+
+        // ⭐ Aqui está o dark mode automático
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system, 
+        themeMode: ThemeMode.system, // Segue o modo do sistema/navegador
 
         routes: {
           RoutesEnum.login.route: (context) => LoginScreen(),
           RoutesEnum.register.route: (context) => const RegisterScreen(),
           RoutesEnum.home.route: (context) => const HomeScreen(),
-
           RoutesEnum.chatList.route: (context) => const ChatListPage(),
           RoutesEnum.newChat.route: (context) => const NewChatScreen(),
           RoutesEnum.chatPage.route: (context) => const ChatPage(),
         },
-        initialRoute: RoutesEnum.login.route, 
+
+        initialRoute: RoutesEnum.login.route,
       ),
     );
   }

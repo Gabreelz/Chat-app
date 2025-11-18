@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 class ChatListPage extends StatefulWidget {
   const ChatListPage({super.key});
 
@@ -57,7 +56,7 @@ class _ChatListPageState extends State<ChatListPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person_outline), 
+            icon: const Icon(Icons.person_outline),
             onPressed: () {
               // A página de perfil ainda está vazia [cite: lib/src/screens/profile/profile_page.dart]
             },
@@ -69,7 +68,6 @@ class _ChatListPageState extends State<ChatListPage> {
         onPressed: () {
           Navigator.pushNamed(context, RoutesEnum.newChat.route);
         },
-        backgroundColor: theme.primaryColor,
         tooltip: 'Nova Conversa',
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -85,9 +83,12 @@ class _ChatListPageState extends State<ChatListPage> {
     if (provider.errorMessage != null) {
       return Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Erro ao carregar: ${provider.errorMessage}', textAlign: TextAlign.center,),
-          ));
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          'Erro ao carregar: ${provider.errorMessage}',
+          textAlign: TextAlign.center,
+        ),
+      ));
     }
 
     if (provider.conversations.isEmpty) {
@@ -128,8 +129,8 @@ class _ChatListPageState extends State<ChatListPage> {
             lastMessageText,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-                color: theme.colorScheme.onSurface.withOpacity(0.7)),
+            style:
+                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
           ),
           trailing: Text(
             _formatTimestamp(time),
