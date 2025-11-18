@@ -9,7 +9,7 @@ class ProfileService {
     try {
       final response =
           await _supabase.from('users').select().eq('id', userId).single();
-      return UserModel.fromMap(response as Map<String, dynamic>);
+      return UserModel.fromMap(response);
     } catch (e) {
       print('Erro ao buscar perfil: $e');
       rethrow;
@@ -26,8 +26,8 @@ class ProfileService {
       final response = await _supabase
           .from('users')
           .select()
-          .neq('id', currentUserId); // Exclui o usuário logado
-
+          //.neq('id', currentUserId); // Exclui o usuário logado
+      .order('created_at');
       final users = (response as List)
           .map((u) => UserModel.fromMap(u as Map<String, dynamic>))
           .toList();
