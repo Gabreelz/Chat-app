@@ -1,4 +1,4 @@
-import 'package:chat_app/src/provaders/chat_list_provider.dart'; // <-- A IMPORTAÇÃO QUE FALTA
+import 'package:chat_app/src/provaders/chat_list_provider.dart';
 import 'package:chat_app/src/utils/routes_enum.dart';
 import 'package:chat_app/src/widgets/custom_avatar.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +18,6 @@ class _ChatListPageState extends State<ChatListPage> {
   @override
   void initState() {
     super.initState();
-    // Carregar as conversas reais ao iniciar a tela
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ChatListProvider>(context, listen: false).loadConversations();
     });
@@ -30,11 +29,11 @@ class _ChatListPageState extends State<ChatListPage> {
     final difference = now.difference(time);
 
     if (difference.inDays == 0) {
-      return DateFormat.Hm().format(time); // '17:30'
+      return DateFormat.Hm().format(time);
     } else if (difference.inDays == 1) {
       return 'Ontem';
     } else {
-      return DateFormat('dd/MM/yy').format(time); // '14/11/25'
+      return DateFormat('dd/MM/yy').format(time); 
     }
   }
 
@@ -59,15 +58,18 @@ class _ChatListPageState extends State<ChatListPage> {
           IconButton(
             icon: const Icon(Icons.person_outline), 
             onPressed: () {
-              // A página de perfil ainda está vazia [cite: lib/src/screens/profile/profile_page.dart]
+              Navigator.pushNamed(context, RoutesEnum.profile.route);
             },
           )
         ],
       ),
       body: _buildBody(context, provider, theme),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, RoutesEnum.newChat.route);
+        onPressed: () async {
+          await Navigator.pushNamed(context, RoutesEnum.newChat.route);
+          if (mounted) {
+            Provider.of<ChatListProvider>(context, listen: false).loadConversations();
+          }
         },
         backgroundColor: theme.primaryColor,
         tooltip: 'Nova Conversa',
@@ -138,10 +140,10 @@ class _ChatListPageState extends State<ChatListPage> {
               color: theme.colorScheme.onSurface.withOpacity(0.5),
             ),
           ),
-          onTap: () {
-            Navigator.pushNamed(
+          onTap: () async {
+            await Navigator.pushNamed(
               context,
-              RoutesEnum.chatPage.route, // Navega para a página de chat
+              RoutesEnum.chatPage.route, 
               arguments: {
                 'conversationId': conversation.conversationId,
                 'otherUserId': conversation.otherUserId,
@@ -149,6 +151,9 @@ class _ChatListPageState extends State<ChatListPage> {
                 'otherUserAvatarUrl': conversation.otherUserAvatarUrl,
               },
             );
+             if (mounted) {
+              Provider.of<ChatListProvider>(context, listen: false).loadConversations();
+            }
           },
         );
       },

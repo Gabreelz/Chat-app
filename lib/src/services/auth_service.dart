@@ -1,3 +1,5 @@
+
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthService {
@@ -8,16 +10,31 @@ class AuthService {
     required String email,
     required String password,
   }) async {
+    
     final response = await _client.auth.signUp(
       email: email,
       password: password,
       data: {'full_name': fullName},
     );
 
-    return response.user != null;
+    if (response.user == null) {
+      return false;
+    }
+
+    try {
+      await _client.from('users').insert({
+        'id': response.user!.id,
+        'name': fullName,
+        'email': email, 
+      });
+      return true;
+
+    } catch (e) {
+      print('Erro ao inserir perfil em public.users: $e');
+      return false;
+    }
   }
 
-  /// Faz login com e-mail e senha.
   Future<bool> signIn({
     required String email,
     required String password,
