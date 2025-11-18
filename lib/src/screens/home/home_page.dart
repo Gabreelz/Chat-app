@@ -15,22 +15,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Screen'),
-        backgroundColor: const Color(0xFF03A9F4),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await Supabase.instance.client.auth.signOut();
-              await navigator.pushReplacementNamed(
-                RoutesEnum.login.route,
-              );
-            },
-          ),
-        ],
-      ),
       body: Column(
         children: [
           const ChatComponent(),
@@ -52,9 +36,8 @@ class _ChatComponentState extends State<ChatComponent> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-      stream: Supabase.instance.client
-          .from('chat_room')
-          .stream(primaryKey: ['id']),
+      stream:
+          Supabase.instance.client.from('chat_room').stream(primaryKey: ['id']),
       builder: (context, asyncSnapshot) {
         if (asyncSnapshot.connectionState == ConnectionState.waiting) {
           return const Expanded(

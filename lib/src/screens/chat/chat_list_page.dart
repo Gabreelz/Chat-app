@@ -46,22 +46,18 @@ class _ChatListPageState extends State<ChatListPage> {
       appBar: AppBar(
         title: const Text('Conversas'),
         leading: IconButton(
-          icon: const Icon(Icons.logout),
           onPressed: () async {
             await Supabase.instance.client.auth.signOut();
             if (mounted) {
               Navigator.pushReplacementNamed(context, RoutesEnum.login.route);
             }
           },
+          icon: Image.asset(
+            'assets/icons/saida.png', // ajuste o caminho do seu PNG
+            width: 24,
+            height: 24,
+          ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () {
-              // A página de perfil ainda está vazia [cite: lib/src/screens/profile/profile_page.dart]
-            },
-          )
-        ],
       ),
       body: _buildBody(context, provider, theme),
       floatingActionButton: FloatingActionButton(
@@ -69,7 +65,11 @@ class _ChatListPageState extends State<ChatListPage> {
           Navigator.pushNamed(context, RoutesEnum.newChat.route);
         },
         tooltip: 'Nova Conversa',
-        child: const Icon(Icons.add, color: Colors.white),
+        child: Image.asset(
+          'assets/icons/logoP.png', // seu PNG de adicionar conversa
+          width: 28,
+          height: 28,
+        ),
       ),
     );
   }
