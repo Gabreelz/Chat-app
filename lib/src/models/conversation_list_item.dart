@@ -1,5 +1,3 @@
-// Um modelo leve para a lista de conversas,
-// em vez de carregar o ConversationModel completo.
 class ConversationListItemModel {
   final String conversationId;
   final String otherUserId;

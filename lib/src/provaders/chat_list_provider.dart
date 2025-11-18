@@ -27,9 +27,7 @@ class ChatListProvider extends ChangeNotifier {
       _errorMessage = 'Erro ao carregar conversas: $e';
       _isLoading = false;
       notifyListeners();
-      if (kDebugMode) {
-        print(_errorMessage);
-      }
+      print(_errorMessage);
     }
   }
 }

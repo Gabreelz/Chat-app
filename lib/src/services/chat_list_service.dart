@@ -1,34 +1,26 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:chat_app/src/models/conversation_list_item.dart'; 
+import 'package:chat_app/src/models/conversation_list_item.dart';
 
 class ChatListService {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient supabase = Supabase.instance.client;
 
   Future<List<ConversationListItemModel>> getConversations() async {
     try {
-      final currentUserId = _supabase.auth.currentUser?.id;
-      if (currentUserId == null) {
-        throw Exception("Usuário não está logado.");
+      final userId = supabase.auth.currentUser?.id ?? '';
+
+      if (userId.isEmpty) {
+        return [];
       }
 
-      // Chama a função RPC
-      final response = await _supabase
-          .rpc('get_conversations_for_user', params: {
-        'current_user_id_input': currentUserId,
-      });
+      final response = await supabase
+          .rpc('get_conversations_for_user', params: {'current_user_id_input': userId});
 
-      if (response is List) {
-        final conversations = response
-            .map((item) => ConversationListItemModel.fromMap(
-                Map<String, dynamic>.from(item)))
-            .toList();
-        return conversations;
-      }
-
-      return [];
+      return (response as List)
+          .map((json) => ConversationListItemModel.fromMap(json))
+          .toList();
     } catch (e) {
-      print('Erro em ChatListService.getConversations: $e');
-      rethrow;
+      print(e);
+      return [];
     }
   }
 }
