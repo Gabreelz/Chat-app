@@ -22,19 +22,20 @@ class _ChatPageState extends State<ChatPage> {
 
   final supabase = Supabase.instance.client;
   final textCtrl = TextEditingController();
-  bool loading = false;
   late ChatProvider chatProvider;
   final ScrollController _scrollCtrl = ScrollController();
+  bool loading = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
     conversationId = args?['conversationId'] ?? '';
     otherUserId = args?['otherUserId'] ?? '';
-    otherUserName = args?['otherUserName']; // Captura o nome
-    otherUserAvatarUrl = args?['otherUserAvatarUrl']; // Captura o avatar
+    otherUserName = args?['otherUserName'];
+    otherUserAvatarUrl = args?['otherUserAvatarUrl'];
 
     chatProvider = Provider.of<ChatProvider>(context, listen: false);
     chatProvider.loadMessages(conversationId, otherUserId: otherUserId);
@@ -55,18 +56,16 @@ class _ChatPageState extends State<ChatPage> {
     if (user == null) return;
 
     final picker = ImagePicker();
-    final XFile? file = await picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1200,
-    );
+    final XFile? file =
+        await picker.pickImage(source: ImageSource.gallery, maxWidth: 1200);
     if (file == null) return;
 
     setState(() => loading = true);
-
     try {
       final bucket = 'chat_files';
       final ext = file.path.split('.').last;
-      final key = '$conversationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final key =
+          '$conversationId/${DateTime.now().millisecondsSinceEpoch}.$ext';
 
       await supabase.storage.from(bucket).uploadBinary(
             key,
@@ -74,17 +73,10 @@ class _ChatPageState extends State<ChatPage> {
             fileOptions: const FileOptions(upsert: true),
           );
 
-      final publicUrl = supabase.storage.from(bucket).getPublicUrl(key);
-
-      await chatProvider.sendFile(conversationId, user.id, publicUrl);
+      final url = supabase.storage.from(bucket).getPublicUrl(key);
+      await chatProvider.sendFile(conversationId, user.id, url);
 
       _scrollToBottom();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar imagem: $e')),
-        );
-      }
     } finally {
       setState(() => loading = false);
     }
@@ -103,10 +95,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _onLongPressMessage(MessageModel m) async {
-    final currentUserId = supabase.auth.currentUser?.id ?? '';
-    final isAuthor = m.authorId == currentUserId;
-    final canEdit = isAuthor && m.canBeEdited();
-    final canDelete = isAuthor && m.canBeDeleted();
+    final userId = supabase.auth.currentUser?.id ?? '';
+    final isAuthor = m.authorId == userId;
 
     showModalBottomSheet(
       context: context,
@@ -114,32 +104,35 @@ class _ChatPageState extends State<ChatPage> {
         return SafeArea(
           child: Wrap(
             children: [
-              if (canEdit)
+              if (isAuthor && m.canBeEdited())
                 ListTile(
                   leading: const Icon(Icons.edit),
                   title: const Text('Editar'),
                   onTap: () {
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
                     _showEditDialog(m);
                   },
                 ),
-              if (canDelete)
+              if (isAuthor && m.canBeDeleted())
                 ListTile(
                   leading: const Icon(Icons.delete),
                   title: const Text('Apagar'),
                   onTap: () async {
-                    Navigator.of(context).pop();
+                    Navigator.pop(context);
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (_) => AlertDialog(
                         title: const Text('Confirmação'),
-                        content: const Text('Deseja apagar esta mensagem?'),
+                        content:
+                            const Text('Deseja apagar esta mensagem?'),
                         actions: [
                           TextButton(
-                              onPressed: () => Navigator.pop(context, false),
+                              onPressed: () =>
+                                  Navigator.pop(context, false),
                               child: const Text('Cancelar')),
                           TextButton(
-                              onPressed: () => Navigator.pop(context, true),
+                              onPressed: () =>
+                                  Navigator.pop(context, true),
                               child: const Text('Apagar')),
                         ],
                       ),
@@ -152,8 +145,8 @@ class _ChatPageState extends State<ChatPage> {
               ListTile(
                 leading: const Icon(Icons.close),
                 title: const Text('Fechar'),
-                onTap: () => Navigator.of(context).pop(),
-              ),
+                onTap: () => Navigator.pop(context),
+              )
             ],
           ),
         );
@@ -170,45 +163,32 @@ class _ChatPageState extends State<ChatPage> {
         content: TextField(
           controller: editCtrl,
           autofocus: true,
-          decoration: const InputDecoration(hintText: 'Texto'),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar')),
           TextButton(
-            onPressed: () async {
-              final newText = editCtrl.text.trim();
-              if (newText.isNotEmpty) {
-                await chatProvider.editMessage(m.id, newText);
-              }
-              Navigator.of(context).pop();
-            },
-            child: const Text('Salvar'),
-          ),
+              onPressed: () async {
+                final txt = editCtrl.text.trim();
+                if (txt.isNotEmpty) {
+                  await chatProvider.editMessage(m.id, txt);
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Salvar')),
         ],
       ),
     );
-    // O dispose estava no lugar errado, movido para fora do builder
-    // editCtrl.dispose();
   }
 
   String _formatLastSeen(DateTime? lastSeen) {
-    if (lastSeen == null) return 'offline';
-
-    final now = DateTime.now();
-    final diff = now.difference(lastSeen);
-
-    if (diff.inSeconds < 60) {
-      return 'agora';
-    } else if (diff.inMinutes < 60) {
-      return 'há ${diff.inMinutes}m';
-    } else if (diff.inHours < 24) {
-      return 'há ${diff.inHours}h';
-    } else {
-      return 'há ${diff.inDays}d';
-    }
+    if (lastSeen == null) return "offline";
+    final diff = DateTime.now().difference(lastSeen);
+    if (diff.inSeconds < 60) return "agora";
+    if (diff.inMinutes < 60) return "há ${diff.inMinutes}m";
+    if (diff.inHours < 24) return "há ${diff.inHours}h";
+    return "há ${diff.inDays}d";
   }
 
   @override
@@ -219,11 +199,11 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  Widget _buildMessageTile(MessageModel m, String currentUserId) {
-    final isMe = m.authorId == currentUserId;
-    final align = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final color = isMe ? Colors.blue.shade200 : Colors.grey.shade200;
-    final textColor = Colors.black87;
+  Widget _buildMessageTile(MessageModel m, String userId) {
+    final isMe = m.authorId == userId;
+    final align =
+        isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final bg = isMe ? Colors.blue.shade200 : Colors.grey.shade200;
 
     return GestureDetector(
       onLongPress: () => _onLongPressMessage(m),
@@ -235,10 +215,10 @@ class _ChatPageState extends State<ChatPage> {
             Container(
               padding: const EdgeInsets.all(10),
               constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
+                  maxWidth:
+                      MediaQuery.of(context).size.width * 0.75),
               decoration: BoxDecoration(
-                color: color,
+                color: bg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: m.fileUrl != null
@@ -251,44 +231,46 @@ class _ChatPageState extends State<ChatPage> {
                           errorBuilder: (_, __, ___) =>
                               const Icon(Icons.broken_image),
                         ),
-                        if (m.text != null && m.text!.isNotEmpty) ...[
-                          const SizedBox(height: 6),
-                          Text(m.text!, style: TextStyle(color: textColor)),
-                        ]
+                        if (m.text != null && m.text!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(m.text!),
+                          )
                       ],
                     )
-                  : Text(m.text ?? '', style: TextStyle(color: textColor)),
+                  : Text(m.text ?? ''),
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  TimeOfDay.fromDateTime(m.createdAt).format(context),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    TimeOfDay.fromDateTime(m.createdAt)
+                        .format(context),
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.black54),
                   ),
-                ),
-                if (m.wasEdited) ...[
-                  const SizedBox(width: 6),
-                  const Text(
-                    '(editado)',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.black45,
+                  if (m.wasEdited)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Text(
+                        "(editado)",
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.black45),
+                      ),
                     ),
-                  ),
+                  if (isMe)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Icon(
+                        m.isRead ? Icons.done_all : Icons.done,
+                        size: 14,
+                        color: m.isRead ? Colors.blue : Colors.black38,
+                      ),
+                    )
                 ],
-                if (isMe) ...[
-                  const SizedBox(width: 6),
-                  Icon(
-                    m.isRead ? Icons.done_all : Icons.done,
-                    size: 14,
-                    color: m.isRead ? Colors.blue : Colors.black38,
-                  )
-                ]
-              ],
+              ),
             )
           ],
         ),
@@ -298,40 +280,36 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = supabase.auth.currentUser?.id ?? '';
+    final userId = supabase.auth.currentUser?.id ?? '';
 
     return Scaffold(
       appBar: AppBar(
-        // Adiciona o Avatar
         leadingWidth: 40,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 8.0),
+          padding: const EdgeInsets.only(left: 8),
           child: CustomAvatar(
-            name: otherUserName ?? '?',
+            name: otherUserName ?? "?",
             imageUrl: otherUserAvatarUrl,
             radius: 18,
           ),
         ),
         title: Consumer<ChatProvider>(
-          builder: (context, provider, _) {
+          builder: (_, provider, __) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Usa o nome do usuário recebido por argumento
-                Text(otherUserName ?? 'Chat'), 
-                const SizedBox(height: 4),
+                Text(otherUserName ?? "Chat"),
                 Text(
                   provider.otherUserIsOnline
-                      ? 'online'
-                      : 'offline • ${_formatLastSeen(provider.otherUserLastSeen)}',
+                      ? "online"
+                      : "offline • ${_formatLastSeen(provider.otherUserLastSeen)}",
                   style: TextStyle(
                     fontSize: 12,
                     color: provider.otherUserIsOnline
                         ? Colors.green
                         : Colors.grey,
-                    fontWeight: FontWeight.normal,
                   ),
-                ),
+                )
               ],
             );
           },
@@ -341,44 +319,19 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: Consumer<ChatProvider>(
-              builder: (context, provider, _) {
+              builder: (_, provider, __) {
                 WidgetsBinding.instance
                     .addPostFrameCallback((_) => _scrollToBottom());
+
                 final msgs = provider.messages;
-                final isSomeoneTyping = provider.typingUsers.entries
-                    .any((e) => e.value && e.key != currentUserId);
 
-                if (msgs.isEmpty) {
-                  return const Center(child: Text('Sem mensagens ainda'));
-                }
+               
 
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollCtrl,
-                        itemCount: msgs.length,
-                        itemBuilder: (_, i) =>
-                            _buildMessageTile(msgs[i], currentUserId),
-                      ),
-                    ),
-                    if (isSomeoneTyping)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'digitando...',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+                return ListView.builder(
+                  controller: _scrollCtrl,
+                  itemCount: msgs.length,
+                  itemBuilder: (_, i) =>
+                      _buildMessageTile(msgs[i], userId),
                 );
               },
             ),
@@ -386,42 +339,35 @@ class _ChatPageState extends State<ChatPage> {
           if (loading) const LinearProgressIndicator(),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.image),
-                    onPressed: _sendImage,
-                  ),
+                      icon: const Icon(Icons.image),
+                      onPressed: _sendImage),
                   Expanded(
                     child: TextField(
                       controller: textCtrl,
-                      textCapitalization: TextCapitalization.sentences,
                       onChanged: (_) =>
                           chatProvider.startTyping(conversationId),
                       onSubmitted: (_) => _sendText(),
                       decoration: const InputDecoration(
-                        hintText: 'Escreva uma mensagem',
+                        hintText: "Escreva uma mensagem",
                         border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(20)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20))),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
-                    onPressed: _sendText,
-                    child: const Text('Enviar'),
-                  ),
+                      onPressed: _sendText,
+                      child: const Text("Enviar"))
                 ],
               ),
             ),
-          ),
+          )
         ],
       ),
     );

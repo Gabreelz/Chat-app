@@ -4,15 +4,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:chat_app/src/models/messageModel.dart';
 import 'package:chat_app/src/services/message_service.dart';
 import 'package:chat_app/src/services/realtime_service.dart';
+// ignore: unused_import
 import 'package:chat_app/src/provaders/chat_list_provider.dart';
+
 class ChatProvider extends ChangeNotifier {
   final _supabase = Supabase.instance.client;
   final MessageService _messageService = MessageService();
   final RealtimeService _realtimeService = RealtimeService();
 
   final List<MessageModel> messages = [];
-  final Map<String, bool> typingUsers = {}; // userId -> isTyping
-  final Map<String, bool> onlineUsers = {}; // userId -> isOnline
+  final Map<String, bool> typingUsers = {};
+  final Map<String, bool> onlineUsers = {};
 
   Timer? _typingTimer;
   String? _currentConversationId;
@@ -23,7 +25,6 @@ class ChatProvider extends ChangeNotifier {
   bool get otherUserIsOnline => _otherUserIsOnline;
   DateTime? get otherUserLastSeen => _otherUserLastSeen;
 
-  /// Carrega as mensagens e inicia listeners realtime
   Future<List<MessageModel>> loadMessages(String conversationId, {String? otherUserId}) async {
     try {
       _currentConversationId = conversationId;
@@ -37,7 +38,6 @@ class ChatProvider extends ChangeNotifier {
       final userId = _supabase.auth.currentUser?.id ?? '';
       await _messageService.markAllAsRead(conversationId, userId);
 
-      // Inscrever-se em realtime (mensagens + typing)
       _realtimeService.listenToMessages(conversationId, (payload) {
         _handleRealtimeChange(payload);
       });
@@ -47,14 +47,12 @@ class ChatProvider extends ChangeNotifier {
         notifyListeners();
       });
 
-      // Inscrever-se ao status online do outro usuário
       if (otherUserId != null) {
         _realtimeService.listenToUserStatus(otherUserId, (bool isOnline) {
           _otherUserIsOnline = isOnline;
           notifyListeners();
         });
 
-        // Obter último acesso
         final lastSeen = await _realtimeService.getLastSeen(otherUserId);
         _otherUserLastSeen = lastSeen;
         notifyListeners();
@@ -68,7 +66,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Envia mensagem de texto (retorna imediatamente se enviado)
   Future<void> sendText(String conversationId, String authorId, String text) async {
     try {
       final msg = await _messageService.sendTextMessage(conversationId, authorId, text);
@@ -84,7 +81,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Envia arquivo/imagem
   Future<void> sendFile(String conversationId, String authorId, String fileUrl) async {
     try {
       final msg = await _messageService.sendFileMessage(conversationId, authorId, fileUrl);
@@ -99,7 +95,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Edita mensagem (regras no service)
   Future<bool> editMessage(String messageId, String newText) async {
     try {
       final edited = await _messageService.editMessage(messageId, newText);
@@ -118,7 +113,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Apaga mensagem (soft delete)
   Future<bool> deleteMessage(String messageId) async {
     try {
       final ok = await _messageService.deleteMessage(messageId);
@@ -134,7 +128,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Marca mensagem como lida
   Future<void> markMessageAsRead(String messageId) async {
     try {
       final ok = await _messageService.markAsRead(messageId);
@@ -150,7 +143,6 @@ class ChatProvider extends ChangeNotifier {
     }
   }
 
-  /// Inicia indicador de digitação (envia typing true e agenda false)
   void startTyping(String conversationId) {
     _typingTimer?.cancel();
     _realtimeService.sendTypingStatus(conversationId, true);
@@ -165,25 +157,22 @@ class ChatProvider extends ChangeNotifier {
     _realtimeService.sendTypingStatus(conversationId, false);
   }
 
-  /// Cancela listeners e timers
   void disposeSubscription() {
     _typingTimer?.cancel();
     if (_currentConversationId != null) {
-      // CORREÇÃO: Remover argumentos. Os métodos não os aceitam mais.
       _realtimeService.unsubscribeFromMessages();
       _realtimeService.unsubscribeFromPresence();
     }
   }
 
-  /// Trata eventos vindo do RealtimeService
   void _handleRealtimeChange(dynamic payload) {
     try {
       dynamic eventType;
       dynamic record;
-      
+
       if (payload is PostgresChangePayload) {
         eventType = payload.eventType;
-        record = payload.newRecord ?? payload.oldRecord;
+        record = payload.newRecord;
       } else if (payload is Map<String, dynamic>) {
         eventType = payload['eventType'] ?? payload['type'];
         record = payload['new'] ?? payload['record'] ?? payload['newRecord'] ?? payload['payload'];
@@ -191,9 +180,8 @@ class ChatProvider extends ChangeNotifier {
         return;
       }
 
-      // Inserção
-      if (eventType == PostgresChangeEvent.insert || 
-          eventType == 'INSERT' || 
+      if (eventType == PostgresChangeEvent.insert ||
+          eventType == 'INSERT' ||
           eventType?.toString().toLowerCase().contains('insert') == true) {
         if (record == null) return;
         final msg = MessageModel.fromJson(Map<String, dynamic>.from(record));
@@ -204,24 +192,18 @@ class ChatProvider extends ChangeNotifier {
             markMessageAsRead(msg.id);
           }
         }
-      }
-
-      // Atualização
-      else if (eventType == PostgresChangeEvent.update || 
-               eventType == 'UPDATE' || 
-               eventType?.toString().toLowerCase().contains('update') == true) {
+      } else if (eventType == PostgresChangeEvent.update ||
+          eventType == 'UPDATE' ||
+          eventType?.toString().toLowerCase().contains('update') == true) {
         if (record == null) return;
         final updated = MessageModel.fromJson(Map<String, dynamic>.from(record));
         final idx = messages.indexWhere((m) => m.id == updated.id);
         if (idx != -1) {
           messages[idx] = updated;
         }
-      }
-
-      // Deleção
-      else if (eventType == PostgresChangeEvent.delete || 
-               eventType == 'DELETE' || 
-               eventType?.toString().toLowerCase().contains('delete') == true) {
+      } else if (eventType == PostgresChangeEvent.delete ||
+          eventType == 'DELETE' ||
+          eventType?.toString().toLowerCase().contains('delete') == true) {
         if (record == null) return;
         final id = record['id'] ?? record['old']?['id'];
         if (id != null) {

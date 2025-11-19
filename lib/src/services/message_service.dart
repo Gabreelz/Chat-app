@@ -17,7 +17,6 @@ class MessageService {
         'text': text,
         'file_url': null,
         'is_read': false,
-        'created_at': DateTime.now().toIso8601String(),
       }).select().single();
 
       return MessageModel.fromJson(Map<String, dynamic>.from(response));
@@ -40,7 +39,6 @@ class MessageService {
         'text': null,
         'file_url': fileUrl,
         'is_read': false,
-        'created_at': DateTime.now().toIso8601String(),
       }).select().single();
 
       return MessageModel.fromJson(Map<String, dynamic>.from(response));
@@ -50,17 +48,16 @@ class MessageService {
     }
   }
 
-  // Carregar mensagens de uma conversa (exclui soft-deleted)
+  // Carregar mensagens da conversa
   Future<List<MessageModel>> loadMessages(String conversationId) async {
     try {
       final response = await supabase
           .from('messages')
           .select()
           .eq('conversation_id', conversationId)
-          .isFilter('deleted_at', null) // CORRIGIDO (era .is_())
+          .isFilter('deleted_at', null)
           .order('created_at', ascending: true);
 
-      // A resposta já é uma List<dynamic> que pode ser castada
       final list = (response as List).cast<Map<String, dynamic>>();
       return list.map((m) => MessageModel.fromJson(m)).toList();
     } catch (e) {
@@ -80,7 +77,7 @@ class MessageService {
     }
   }
 
-  // Editar mensagem (até 15 minutos após envio)
+  // Editar mensagem se <= 15 minutos
   Future<MessageModel?> editMessage(String messageId, String newText) async {
     try {
       final message = await supabase.from('messages').select().eq('id', messageId).single();
@@ -108,7 +105,7 @@ class MessageService {
     }
   }
 
-  // Apagar mensagem (soft delete: marcar deleted_at) (até 15 minutos após envio)
+  // Soft delete: marcar deleted_at
   Future<bool> deleteMessage(String messageId) async {
     try {
       final message = await supabase.from('messages').select().eq('id', messageId).single();
@@ -130,15 +127,16 @@ class MessageService {
     }
   }
 
-  // Marcar todas as mensagens de uma conversa como lidas (exceto as do próprio usuário)
+  // Marcar todas as mensagens como lidas
   Future<bool> markAllAsRead(String conversationId, String userId) async {
-      try {
+    try {
       await supabase
           .from('messages')
           .update({'is_read': true})
           .eq('conversation_id', conversationId)
           .neq('author_id', userId)
-          .isFilter('deleted_at', null); // CORRIGIDO (era .is_())
+          .isFilter('deleted_at', null);
+
       return true;
     } catch (e) {
       print('Erro ao marcar todas como lidas: $e');

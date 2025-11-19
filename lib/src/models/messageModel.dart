@@ -25,14 +25,14 @@ class MessageModel {
 
   factory MessageModel.fromMap(Map<String, dynamic> m) {
     return MessageModel(
-      id: m['id'] as String? ?? '', // CORRIGIDO
-      conversationId: m['conversation_id'] as String? ?? '', // CORRIGIDO
-      authorId: m['author_id'] as String? ?? '', // CORRIGIDO
+      id: m['id'] as String? ?? '',
+      conversationId: m['conversation_id'] as String? ?? '',
+      authorId: m['author_id'] as String? ?? '',
       text: m['text'],
       fileUrl: m['file_url'],
       createdAt: m['created_at'] != null
           ? DateTime.parse(m['created_at'])
-          : DateTime.now(), // CORRIGIDO
+          : DateTime.now(),
       isRead: m['is_read'] as bool? ?? false,
       editedAt: m['edited_at'] != null ? DateTime.parse(m['edited_at']) : null,
       deletedAt: m['deleted_at'] != null ? DateTime.parse(m['deleted_at']) : null,
@@ -59,25 +59,25 @@ class MessageModel {
 
   Map<String, dynamic> toJson() => toMap();
 
-  // Método para verificar se pode ser editada
+  // Pode editar até 15 minutos e se não foi deletada
   bool canBeEdited() {
     final diffMinutes = DateTime.now().difference(createdAt).inMinutes;
     return diffMinutes <= 15 && deletedAt == null;
   }
 
-  // Método para verificar se pode ser apagada
+  // Pode apagar até 15 minutos e se não foi deletada
   bool canBeDeleted() {
     final diffMinutes = DateTime.now().difference(createdAt).inMinutes;
     return diffMinutes <= 15 && deletedAt == null;
   }
 
-  // Método para verificar se foi editada
+  // Foi editada?
   bool get wasEdited => editedAt != null;
 
-  // Método para verificar se foi apagada
-  bool get wasDeleted => deletedAt == null;
+  // Foi apagada? (CORRIGIDO)
+  bool get wasDeleted => deletedAt != null;
 
-  // CopyWith para criar uma cópia com campos alterados
+  // CopyWith
   MessageModel copyWith({
     String? id,
     String? conversationId,
